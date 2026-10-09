@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import meta from "../../content/tilda-meta.json";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://cnd05.ru"),
   title: meta.title,
   description: meta.description,
   icons: {

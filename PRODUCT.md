@@ -27,22 +27,23 @@ Marketing / lead-gen site for a Dagestan real-estate practice. Visitors compare 
 ## Capabilities and Constraints
 
 - Must preserve: ЖК catalog, contacts, photography of objects/team as available.
-- Existing stack: Next.js app currently serving a Tilda mirror (`public/mirror/index.html`, `public/tilda/`).
+- Stack: Next.js App Router + Tailwind; content in `content/site.json`; images in `public/assets/`; optional project PDFs in `public/projects/`.
+- Conversion: multi-step quiz posts into WhatsApp; phone / Telegram / email remain available.
 - Content language: Russian.
-- Undecided: whether the multi-step quiz remains the primary conversion path after redesign (lead capture + call remain required).
+- Production hostname target: `cnd05.ru` (preview may run on Vercel until DNS is switched).
 
 ## Brand Commitments
 
-- Public name: «Недвижимость Дагестана» / CND (site cnd05.ru).
+- Public name: «Недвижимость Дагестана» / CND / ЦНД (site cnd05.ru).
 - Contact email in use: cndnedvizhka05@gmail.com.
 
 ## Evidence on Hand
 
-- Mirrored page copy and structure: `public/mirror/index.html`.
-- Meta: `content/tilda-meta.json`.
-- Listed ЖК examples in current content: Московский, Новый Горизонт, Высота, Флагман, Гранд Эра (Makhachkala districts/addresses).
-- Team mention: Алиметов Мустафа (менеджер).
-- Image assets referenced under `/tilda/images/`; local completeness may be partial — future work must not invent testimonials, prices, or claims not already on the site.
+- Canonical content: `content/site.json` (18 ЖК across Махачкала, Каспийск, Дербент).
+- Project PDF mapping: `content/project-pdfs.json` (some files still unassigned).
+- Design system: `DESIGN.md` (forest / brass sales site).
+- Team includes founder Алиметов Мустафа and regional managers.
+- Do not invent testimonials, prices, or claims beyond `site.json` and approved assets.
 
 ## Product Principles
 

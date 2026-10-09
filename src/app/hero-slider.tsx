@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   useCallback,
   useEffect,
@@ -124,13 +125,16 @@ export function HeroSlider() {
             className={`hero-slide${i === index ? " is-active" : ""}`}
             aria-hidden={i !== index}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={product.image}
               alt={product.name}
+              fill
+              sizes="(max-width: 560px) 100vw, 50vw"
+              quality={75}
+              {...(i === 0
+                ? { preload: true }
+                : { loading: "lazy" as const })}
               draggable={false}
-              fetchPriority={i === 0 ? "high" : "auto"}
-              loading={i === 0 ? "eager" : "lazy"}
             />
           </div>
         ))}

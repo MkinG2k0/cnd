@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -161,8 +162,7 @@ export default async function PropertyPage({ params }: PageProps) {
 
       <header className="header wrap">
         <BackHomeLink className="brand" aria-label="ЦНД — на главную">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={content.logo} alt="" width={57} height={57} />
+          <Image src={content.logo} alt="" width={57} height={57} sizes="57px" />
           <span>
             <b>ЦНД</b>
             <small>
@@ -199,13 +199,14 @@ export default async function PropertyPage({ params }: PageProps) {
 
         <article className="wrap property-layout">
           <div className="property-media">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={product.image}
               alt={product.name}
               width={960}
               height={660}
-              fetchPriority="high"
+              sizes="(max-width: 900px) 100vw, 50vw"
+              quality={75}
+              preload
             />
           </div>
 
@@ -259,8 +260,15 @@ export default async function PropertyPage({ params }: PageProps) {
                   href={productPath(item)}
                   className="related-card"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.image} alt="" width={400} height={280} loading="lazy" />
+                  <Image
+                    src={item.image}
+                    alt=""
+                    width={400}
+                    height={280}
+                    loading="lazy"
+                    sizes="(max-width: 560px) 100vw, (max-width: 900px) 50vw, 33vw"
+                    quality={75}
+                  />
                   <div>
                     <h3>{item.name}</h3>
                     <p>{money(item.price)}</p>

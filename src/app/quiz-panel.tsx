@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { content, isCustomOption, whatsappURL } from "../lib/content";
 
@@ -187,11 +188,14 @@ export function QuizPanel() {
                     />
                     {value}
                     {question.images?.[index] ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={question.images[index]}
                         alt=""
                         loading="lazy"
+                        width={74}
+                        height={58}
+                        sizes="74px"
+                        quality={70}
                       />
                     ) : null}
                   </label>

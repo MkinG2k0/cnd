@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   useMemo,
@@ -65,8 +66,7 @@ export function Home() {
 
       <header className="header wrap">
         <a href="#" className="brand" aria-label="ЦНД — на главную">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={content.logo} alt="" width={57} height={57} />
+          <Image src={content.logo} alt="" width={57} height={57} sizes="57px" />
           <span>
             <b>ЦНД</b>
             <small>
@@ -274,13 +274,14 @@ export function Home() {
                       className="property-image"
                       aria-label={`Подробнее: ${p.name}`}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={p.image}
                         alt={p.name}
                         loading="lazy"
                         width={640}
                         height={440}
+                        sizes="(max-width: 560px) 100vw, (max-width: 800px) 50vw, 33vw"
+                        quality={75}
                       />
                       <span className="city-tag">{p.city}</span>
                       {p.projectPdf ? (
@@ -348,11 +349,14 @@ export function Home() {
           <div className="wrap founder">
             <div className="founder-portrait reveal">
               {content.founder.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={content.founder.image}
                   alt={content.founder.name}
                   loading="lazy"
+                  width={720}
+                  height={980}
+                  sizes="(max-width: 560px) 100vw, 40vw"
+                  quality={75}
                 />
               ) : (
                 <div className="no-photo" aria-hidden="true">
@@ -386,13 +390,14 @@ export function Home() {
                 className="person reveal"
                 style={{ "--d": `${i * 80}ms` } as CSSProperties}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={person.image}
                   alt={person.name}
                   loading="lazy"
                   width={320}
                   height={320}
+                  sizes="(max-width: 800px) 45vw, 25vw"
+                  quality={75}
                 />
                 <h3>{person.name}</h3>
                 <p>{person.role}</p>

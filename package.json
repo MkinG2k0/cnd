@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "import:tilda": "node scripts/import-tilda.mjs && node scripts/build-mirror.mjs"
+    "lint": "eslint"
   },
   "dependencies": {
     "next": "16.4.0",

@@ -1,0 +1,31 @@
+{
+  "byName": {
+    "ЖК Московский": "/projects/moskovskiy.pdf",
+    "ЖК Флагман": "/projects/flagman.pdf",
+    "ЖК Парк у Дома": "/projects/park-u-doma.pdf"
+  },
+  "unassigned": [
+    {
+      "file": "/projects/bashnya-one.pdf",
+      "source": "Башня One.pdf"
+    },
+    {
+      "file": "/projects/apart-hotel.pdf",
+      "source": "ПП 6 эт Апарт-отель.pdf",
+      "note": "Карабудахкентский р-н, Манаскент / Турали"
+    },
+    {
+      "file": "/projects/primakova.pdf",
+      "source": "Примакова2-2.pdf"
+    },
+    {
+      "file": "/projects/azure.pdf",
+      "source": "AZURE-сжатый.pdf"
+    },
+    {
+      "file": "/projects/hotel-karabudakhkent.pdf",
+      "source": "Снимок экрана 2024—03—13 в 18.16.41.pdf",
+      "note": "Гостиничный комплекс, Карабудахкентский р-н"
+    }
+  ]
+}

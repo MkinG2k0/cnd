@@ -1,0 +1,6 @@
+/* Tilda mirror uses its own CSS from /tilda/css. Keep globals minimal. */
+html,
+body {
+  margin: 0;
+  padding: 0;
+}

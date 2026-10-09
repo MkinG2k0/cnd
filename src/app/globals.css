@@ -290,21 +290,27 @@ a.button.light{margin-top:28px}
 }
 
 /* Project PDF viewer */
-.project-pdf-modal{width:min(1120px,calc(100vw - 32px));max-width:none;height:min(86vh,920px);padding:0;border:none;border-radius:14px;background:#fff;box-shadow:0 30px 80px rgba(12,29,23,.28)}
+.project-pdf-modal{width:min(1120px,calc(100vw - 32px));max-width:none;height:min(86vh,920px);padding:0;border:none;border-radius:14px;background:#fff;box-shadow:0 30px 80px rgba(12,29,23,.28);overflow:hidden}
 .project-pdf-modal::backdrop{background:rgba(12,29,23,.55)}
 .project-pdf-shell{display:flex;flex-direction:column;height:100%;min-height:0}
-.project-pdf-bar{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid var(--line);flex-shrink:0}
+.project-pdf-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;border-bottom:1px solid var(--line);flex-shrink:0}
+.project-pdf-heading{min-width:0;flex:1}
 .project-pdf-kicker{font-size:11px;color:var(--muted);margin-bottom:4px;letter-spacing:.02em}
-.project-pdf-bar h2{font-size:22px;letter-spacing:-.03em}
+.project-pdf-bar h2{font-size:22px;letter-spacing:-.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .project-pdf-bar-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.project-pdf-close{position:static;width:40px;height:40px;flex-shrink:0;background:#fff;border:1px solid #dce3db;border-radius:50%;font-size:26px;line-height:1;display:grid;place-items:center;cursor:pointer;transition:transform .2s,background .2s}
+.project-pdf-close:hover{transform:rotate(90deg);background:#f3f5f2}
 .project-pdf-frame{flex:1;width:100%;min-height:0;border:0;background:var(--pale)}
 .project-doc-tag{position:absolute;left:14px;bottom:14px;z-index:2;font-size:11px;padding:6px 10px;border-radius:6px;background:rgba(25,62,53,.92);color:#fff;letter-spacing:.01em;pointer-events:none}
 .property-image{position:relative}
 @media(max-width:560px){
   .project-pdf-modal{width:calc(100vw - 16px);height:min(92vh,900px);border-radius:10px}
-  .project-pdf-bar{flex-direction:column;padding:14px 14px 12px}
-  .project-pdf-bar-actions{width:100%;justify-content:space-between}
-  .project-pdf-bar h2{font-size:18px}
+  .project-pdf-bar{flex-wrap:wrap;align-items:flex-start;padding:14px}
+  .project-pdf-heading{width:calc(100% - 50px);order:1}
+  .project-pdf-close{order:2;margin-left:auto}
+  .project-pdf-bar-actions{width:100%;order:3;justify-content:stretch}
+  .project-pdf-bar-actions .button{flex:1;justify-content:center}
+  .project-pdf-bar h2{font-size:18px;white-space:normal}
 }
 
 /* Custom scrollbars */

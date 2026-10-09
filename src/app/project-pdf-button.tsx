@@ -70,7 +70,7 @@ export function ProjectPdfButton({
           {open ? (
             <iframe
               className="project-pdf-frame"
-              src={`${href}#view=FitH`}
+              src={`${href}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
               title={`Проект ${name}`}
             />
           ) : null}

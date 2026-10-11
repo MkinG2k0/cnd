@@ -5,8 +5,8 @@ import { notFound } from "next/navigation";
 import {
   SITE_NAME,
   SITE_URL,
-  content,
   formatPropertyDetail,
+  getContent,
   getProductBySlug,
   money,
   phoneHref,
@@ -23,7 +23,14 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
+function absoluteUrl(url: string) {
+  if (!url) return SITE_URL;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${SITE_URL}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
+export async function generateStaticParams() {
+  const content = await getContent();
   return content.products.map((product) => ({
     slug: productSlug(product),
   }));
@@ -33,7 +40,8 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const content = await getContent();
+  const product = getProductBySlug(content.products, slug);
   if (!product) {
     return { title: "Объект не найден" };
   }
@@ -79,11 +87,12 @@ export async function generateMetadata({
 
 export default async function PropertyPage({ params }: PageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const content = await getContent();
+  const product = getProductBySlug(content.products, slug);
   if (!product) notFound();
 
   const phoneLink = phoneHref(content.contacts.phone);
-  const related = relatedProducts(product);
+  const related = relatedProducts(content.products, product);
   const pageUrl = `${SITE_URL}${productPath(product)}`;
   const wa = whatsappURL(
     content.contacts.whatsapp,
@@ -96,7 +105,7 @@ export default async function PropertyPage({ params }: PageProps) {
     name: product.name,
     description: productDescription(product, 300),
     url: pageUrl,
-    image: `${SITE_URL}${product.image}`,
+    image: absoluteUrl(product.image),
     datePosted: "2026-10-09",
     offers: {
       "@type": "Offer",

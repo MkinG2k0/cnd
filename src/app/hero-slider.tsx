@@ -5,23 +5,25 @@ import {
   useCallback,
   useEffect,
   useEffectEvent,
+  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { content, productPath, type Product } from "../lib/content";
+import { productPath, type Product } from "../lib/content";
 import { ProductLink } from "./product-link";
 
 const AUTO_MS = 4500;
 const SWIPE_PX = 48;
 
-const slides: Product[] = (() => {
-  const grand = content.products.find((p) => p.name === "ЖК Грандберег");
-  if (!grand) return content.products;
-  return [grand, ...content.products.filter((p) => p.id !== grand.id)];
-})();
+function buildSlides(products: Product[]) {
+  const grand = products.find((p) => p.name === "ЖК Грандберег");
+  if (!grand) return products;
+  return [grand, ...products.filter((p) => p.id !== grand.id)];
+}
 
-export function HeroSlider() {
+export function HeroSlider({ products }: { products: Product[] }) {
+  const slides = useMemo(() => buildSlides(products), [products]);
   const [index, setIndex] = useState(0);
   const [dragPx, setDragPx] = useState(0);
   const [dragging, setDragging] = useState(false);

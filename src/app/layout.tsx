@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Golos_Text } from "next/font/google";
-import { SITE_NAME, SITE_URL, content } from "../lib/content";
+import { SITE_NAME, SITE_URL, getContent } from "../lib/content";
 import "./globals.css";
 
 const golos = Golos_Text({
@@ -32,8 +32,8 @@ export const metadata: Metadata = {
     "агентство недвижимости",
   ],
   icons: {
-    icon: content.logo,
-    apple: content.logo,
+    icon: "/assets/logo.jpg",
+    apple: "/assets/logo.jpg",
   },
   alternates: {
     canonical: SITE_URL,
@@ -78,31 +78,36 @@ export const metadata: Metadata = {
   },
 };
 
-const orgJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "RealEstateAgent",
-  name: SITE_NAME,
-  alternateName: "ЦНД",
-  url: SITE_URL,
-  logo: `${SITE_URL}${content.logo}`,
-  image: `${SITE_URL}/assets/property-09.jpg`,
-  telephone: content.contacts.phone,
-  email: content.contacts.email,
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "5-я линия Акушинского 25",
-    addressLocality: "Махачкала",
-    addressRegion: "Республика Дагестан",
-    addressCountry: "RU",
-  },
-  areaServed: ["Махачкала", "Каспийск", "Дербент", "Дагестан"],
-  sameAs: [
-    content.contacts.telegram,
-    content.contacts.instagram,
-  ],
-};
+function absoluteUrl(url: string) {
+  if (!url) return SITE_URL;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${SITE_URL}${url.startsWith("/") ? url : `/${url}`}`;
+}
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const content = await getContent();
+
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    name: SITE_NAME,
+    alternateName: "ЦНД",
+    url: SITE_URL,
+    logo: absoluteUrl(content.logo),
+    image: `${SITE_URL}/assets/property-09.jpg`,
+    telephone: content.contacts.phone,
+    email: content.contacts.email,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "5-я линия Акушинского 25",
+      addressLocality: "Махачкала",
+      addressRegion: "Республика Дагестан",
+      addressCountry: "RU",
+    },
+    areaServed: ["Махачкала", "Каспийск", "Дербент", "Дагестан"],
+    sameAs: [content.contacts.telegram, content.contacts.instagram],
+  };
+
   return (
     <html lang="ru" className={golos.variable}>
       <body>

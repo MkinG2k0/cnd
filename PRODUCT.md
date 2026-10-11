@@ -27,7 +27,7 @@ Marketing / lead-gen site for a Dagestan real-estate practice. Visitors compare 
 ## Capabilities and Constraints
 
 - Must preserve: ЖК catalog, contacts, photography of objects/team as available.
-- Stack: Next.js App Router + Tailwind; content in `content/site.json`; images in `public/assets/`; optional project PDFs in `public/projects/`.
+- Stack: Next.js App Router + Tailwind; content in Sanity (`8i7jup9p` / `production`); Studio in `studio-cnd/`; optional project PDFs in `public/projects/`.
 - Conversion: multi-step quiz posts into WhatsApp; phone / Telegram / email remain available.
 - Content language: Russian.
 - Production hostname target: `cnd05.ru` (preview may run on Vercel until DNS is switched).

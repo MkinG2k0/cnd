@@ -9,10 +9,10 @@ import {
 } from "react";
 import {
   cityCounts,
-  content,
   money,
   phoneHref,
   productPath,
+  type SiteContent,
 } from "../lib/content";
 import { HeroSlider } from "./hero-slider";
 import { HomeScrollRestore } from "./home-scroll-restore";
@@ -23,7 +23,7 @@ import { QuizPanel } from "./quiz-panel";
 type CityFilter = "all" | string;
 type SortMode = "default" | "asc" | "desc";
 
-export function Home() {
+export function Home({ content }: { content: SiteContent }) {
   const [city, setCity] = useState<CityFilter>("all");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortMode>("default");
@@ -46,7 +46,7 @@ export function Home() {
       );
     }
     return list;
-  }, [city, query, sort]);
+  }, [city, content.products, query, sort]);
 
   const visible = expanded ? matches : matches.slice(0, 6);
   const showMore = !expanded && matches.length > 6;
@@ -153,7 +153,7 @@ export function Home() {
             </div>
           </div>
           <div className="hero-enter-item hero-slider-wrap" style={{ "--d": "120ms" } as CSSProperties}>
-            <HeroSlider />
+            <HeroSlider products={content.products} />
           </div>
         </section>
 
@@ -417,7 +417,10 @@ export function Home() {
                 {content.quizIntro}
               </p>
             </div>
-            <QuizPanel />
+            <QuizPanel
+              quiz={content.quiz}
+              whatsapp={content.contacts.whatsapp}
+            />
           </div>
         </section>
 

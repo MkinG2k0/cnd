@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_NAME, SITE_URL } from "../lib/content";
+import { SITE_NAME, SITE_URL, getContent } from "../lib/content";
 import { Home } from "./home";
 
 export const metadata: Metadata = {
@@ -19,6 +19,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
-  return <Home />;
+export default async function HomePage() {
+  const content = await getContent();
+  return <Home content={content} />;
 }

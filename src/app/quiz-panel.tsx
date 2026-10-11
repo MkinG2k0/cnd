@@ -2,9 +2,19 @@
 
 import Image from "next/image";
 import { useEffect, useId, useState, type FormEvent } from "react";
-import { content, isCustomOption, whatsappURL } from "../lib/content";
+import {
+  isCustomOption,
+  whatsappURL,
+  type QuizQuestion,
+} from "../lib/content";
 
-export function QuizPanel() {
+export function QuizPanel({
+  quiz,
+  whatsapp,
+}: {
+  quiz: QuizQuestion[];
+  whatsapp: string;
+}) {
   const titleId = useId();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<string[][]>([]);
@@ -16,9 +26,9 @@ export function QuizPanel() {
   const [draftAnswers, setDraftAnswers] = useState<string[]>([]);
   const [draftCustom, setDraftCustom] = useState("");
 
-  const totalSteps = content.quiz.length + 1;
-  const isLast = step === content.quiz.length;
-  const question = !isLast ? content.quiz[step] : null;
+  const totalSteps = quiz.length + 1;
+  const isLast = step === quiz.length;
+  const question = !isLast ? quiz[step] : null;
 
   useEffect(() => {
     if (isLast) return;
@@ -83,7 +93,7 @@ export function QuizPanel() {
 
     const message = [
       "Добрый день! Помогите подобрать квартиру.",
-      ...content.quiz.map((q, i) => `${q.title} ${answerText(i)}`),
+      ...quiz.map((q, i) => `${q.title} ${answerText(i)}`),
       contactName ? `ФИО: ${contactName}` : "",
       contactPhone ? `Телефон: ${contactPhone}` : "",
     ]
@@ -91,7 +101,7 @@ export function QuizPanel() {
       .join("\n");
 
     window.open(
-      whatsappURL(content.contacts.whatsapp, message),
+      whatsappURL(whatsapp, message),
       "_blank",
       "noopener,noreferrer",
     );
@@ -124,7 +134,7 @@ export function QuizPanel() {
                 Обсудим вашу квартиру
               </h3>
               <div className="quiz-summary">
-                {content.quiz.map((q, i) => (
+                {quiz.map((q, i) => (
                   <p key={q.title}>
                     <b>{q.title}</b>
                     <br />

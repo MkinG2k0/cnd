@@ -1326,7 +1326,7 @@ git commit -m "Implement contacts screen from Sanity settings"
 Mirror `src/app/quiz-panel.tsx` logic:
 
 - Steps = quiz questions + final contact/consent step
-- Multi vs single select: if question has images or clearly multi — follow site: options toggle; for MVP treat all question steps as multi-select when user can pick several (match site: check how site decides multi — if site uses multi for all, do the same; else single). **Match site:** `quiz-panel` uses `multi` based on its UI — read `quiz-panel.tsx` and copy the same rule.
+- Selection mode **must match site** (`src/app/quiz-panel.tsx`): multi-select (checkbox) **only when `step === 2`** (районы); all other question steps are single-select (radio). Show help text «Отметьте один или несколько вариантов» only on step 2.
 - Custom option requires text
 - Final step: name (optional), phone (optional with same regex), consent required
 - On submit: `Linking.openURL(whatsappURL(contacts.whatsapp, buildQuizMessage(...)))` then `router.back()`

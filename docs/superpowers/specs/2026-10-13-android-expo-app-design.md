@@ -99,7 +99,7 @@ Root `package.json` stays the website. `mobile/` is an independent Expo project 
 - Request permission on first launch (or first meaningful session)
 - Broadcast campaigns for MVP via Expo Push / Firebase Console (no in-house admin)
 - Optional deep link payload with slug
-- Token persistence beyond device-local storage / Expo project defaults can stay minimal for MVP; a dedicated registration API is out of scope unless required by the chosen Expo push setup
+- MVP uses Expo’s project-level push delivery (device tokens handled by Expo). No custom token-registration backend in MVP; add one only if Expo project push tools prove insufficient
 
 ### Conversion
 

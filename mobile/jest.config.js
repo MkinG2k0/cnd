@@ -5,4 +5,5 @@ module.exports = {
   roots: ["<rootDir>/__tests__"],
   moduleFileExtensions: ["ts", "tsx", "js"],
   testMatch: ["**/*.test.ts"],
+  setupFiles: ["<rootDir>/jest.setup.js"],
 };

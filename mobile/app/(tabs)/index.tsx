@@ -1,14 +1,12 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+import { colors, spacing } from '@/src/theme/tokens';
 
-export default function TabOneScreen() {
+export default function CatalogScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+      <Text style={styles.title}>Каталог жилых комплексов</Text>
+      <Text style={styles.subtitle}>Список объектов появится здесь.</Text>
     </View>
   );
 }
@@ -18,14 +16,18 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    padding: spacing.xl,
+    backgroundColor: colors.pale,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    color: colors.ink,
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+  subtitle: {
+    color: colors.muted,
+    fontSize: 15,
+    marginTop: spacing.sm,
   },
 });

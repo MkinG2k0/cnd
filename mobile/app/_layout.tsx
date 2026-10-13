@@ -1,8 +1,11 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { FavoritesProvider } from '@/hooks/useFavorites';
+import { useNotificationObserver } from '@/src/notifications/observer';
+import { registerForPushNotificationsAsync } from '@/src/notifications/register';
 import { colors } from '@/src/theme/tokens';
 
 export {
@@ -15,6 +18,16 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  useNotificationObserver();
+
+  useEffect(() => {
+    void registerForPushNotificationsAsync().then((token) => {
+      if (__DEV__ && token) {
+        console.log('Expo push token:', token);
+      }
+    });
+  }, []);
+
   return (
     <FavoritesProvider>
       <StatusBar style="light" />

@@ -16,8 +16,10 @@ export function normalizeSlugs(slugs: string[]): string[] {
 
 export function toggleSlug(slugs: string[], slug: string): string[] {
   const set = new Set(normalizeSlugs(slugs));
-  if (set.has(slug)) set.delete(slug);
-  else set.add(slug);
+  const normalizedSlug = slug.trim();
+  if (!normalizedSlug) return Array.from(set);
+  if (set.has(normalizedSlug)) set.delete(normalizedSlug);
+  else set.add(normalizedSlug);
   return Array.from(set);
 }
 

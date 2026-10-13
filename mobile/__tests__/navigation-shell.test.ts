@@ -40,4 +40,36 @@ describe("navigation shell", () => {
     expect(productCard).toContain("money(price)");
     expect(productCard).toContain("pathname: \"/zhk/[slug]\"");
   });
+
+  test("detail settings failure does not hide the product", () => {
+    const detail = read("app/zhk/[slug].tsx");
+
+    expect(detail).not.toContain("Promise.all([");
+    expect(detail).toContain("setContacts(null)");
+  });
+
+  test("quiz consent has only one toggle handler", () => {
+    const quiz = read("app/quiz.tsx");
+
+    expect(quiz).toContain("onValueChange={setConsent}");
+    expect(quiz).not.toMatch(
+      /<Pressable[\s\S]*?accessibilityRole="checkbox"[\s\S]*?<Switch/,
+    );
+  });
+
+  test("favorites become ready even when storage loading fails", () => {
+    const favorites = read("hooks/useFavorites.tsx");
+
+    expect(favorites).toContain(".finally(() =>");
+    expect(favorites).toContain("setReady(true)");
+  });
+
+  test("push registration persists the last token", () => {
+    const registration = read("src/notifications/register.ts");
+
+    expect(registration).toContain('PUSH_TOKEN_KEY = "cnd.push.token"');
+    expect(registration).toContain(
+      "AsyncStorage.setItem(PUSH_TOKEN_KEY, token.data)",
+    );
+  });
 });

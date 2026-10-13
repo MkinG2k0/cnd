@@ -200,12 +200,9 @@ export default function QuizScreen() {
               style={styles.input}
               value={contactPhone}
             />
-            <Pressable
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: consent }}
-              onPress={() => setConsent((current) => !current)}
-              style={styles.consent}>
+            <View style={styles.consent}>
               <Switch
+                accessibilityLabel="Согласие на передачу данных через WhatsApp"
                 onValueChange={setConsent}
                 trackColor={{ false: colors.line, true: colors.forest }}
                 value={consent}
@@ -213,7 +210,7 @@ export default function QuizScreen() {
               <Text style={styles.consentText}>
                 Я согласен передать введённые данные менеджеру через WhatsApp.
               </Text>
-            </Pressable>
+            </View>
             <Text style={styles.help}>
               Кнопка откроет WhatsApp с вашими ответами. Проверьте сообщение и
               отправьте его самостоятельно. До этого заявка не отправляется.

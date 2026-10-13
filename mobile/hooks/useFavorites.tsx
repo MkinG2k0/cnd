@@ -28,11 +28,16 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let alive = true;
-    loadFavoriteSlugs().then((value) => {
-      if (!alive) return;
-      setSlugs(value);
-      setReady(true);
-    });
+    loadFavoriteSlugs()
+      .then((value) => {
+        if (alive) setSlugs(value);
+      })
+      .catch(() => {
+        if (alive) setSlugs([]);
+      })
+      .finally(() => {
+        if (alive) setReady(true);
+      });
     return () => {
       alive = false;
     };

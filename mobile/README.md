@@ -39,7 +39,9 @@ npx eas build -p android --profile preview
 
 ## Google Play и публикация
 
-- **Push-уведомления:** массовые рассылки настраиваются через [Expo push tool](https://expo.dev/notifications) или FCM; в приложении регистрируется Expo push token (см. `src/notifications/register.ts`).
+- **Push-уведомления:** [Expo push tool](https://expo.dev/notifications) отправляет уведомление на конкретные Expo push token и сам по себе не выполняет массовую рассылку без списка токенов.
+- `getExpoPushTokenAsync` требует настоящий EAS project ID. После `eas init` добавьте выданный ID в `app.json` по пути `expo.extra.eas.projectId`; не используйте вымышленное значение.
+- У MVP нет собственного push-бэкенда. Поэтому оператору нужно отдельно собрать токены устройств: при development-сборке токен печатается в лог с префиксом `Expo push token:`, а последний полученный токен сохраняется на устройстве в AsyncStorage под ключом `cnd.push.token`. В дальнейшем массовую доставку можно реализовать через разрешённую инфраструктуру, например FCM topics.
 - **Data safety (Play Console):** укажите сбор push-токена для уведомлений; избранное хранится только на устройстве (AsyncStorage), на сервер не отправляется.
 - **Политика конфиденциальности:** перед отправкой в магазин нужен публичный URL на домене сайта — `https://cnd05.ru/privacy` (страница на Next-сайте).
 

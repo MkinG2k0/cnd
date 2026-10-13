@@ -9,3 +9,8 @@ test("toggleSlug adds and removes", () => {
   expect(toggleSlug([], "x")).toEqual(["x"]);
   expect(toggleSlug(["x", "y"], "x")).toEqual(["y"]);
 });
+
+test("toggleSlug trims the incoming slug before adding and removing", () => {
+  expect(toggleSlug([], "  x  ")).toEqual(["x"]);
+  expect(toggleSlug(["x", "y"], "  x  ")).toEqual(["y"]);
+});

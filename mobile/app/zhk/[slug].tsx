@@ -45,13 +45,16 @@ export default function ProductScreen() {
 
     setLoading(true);
     setError(false);
+    setContacts(null);
     try {
-      const [nextProduct, settings] = await Promise.all([
-        fetchProductBySlug(slug),
-        fetchSiteSettings(),
-      ]);
+      const nextProduct = await fetchProductBySlug(slug);
       setProduct(nextProduct);
-      setContacts(settings.contacts);
+      try {
+        const settings = await fetchSiteSettings();
+        setContacts(settings.contacts);
+      } catch {
+        setContacts(null);
+      }
     } catch {
       setError(true);
     } finally {

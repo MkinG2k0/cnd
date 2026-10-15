@@ -1,12 +1,17 @@
-import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import { useEffect } from "react";
 
-function redirectFromNotification(notification: Notifications.Notification) {
-  const data = notification.request.content.data as {
-    slug?: string;
-    url?: string;
-  };
+import { getNotifications } from "./module";
+
+function redirectFromNotification(notification: {
+  request: { content: { data?: Record<string, unknown> } };
+}) {
+  const data = notification.request.content.data as
+    | {
+        slug?: string;
+        url?: string;
+      }
+    | undefined;
 
   if (typeof data?.url === "string" && data.url) {
     router.push(data.url as never);
@@ -23,6 +28,11 @@ function redirectFromNotification(notification: Notifications.Notification) {
 
 export function useNotificationObserver() {
   useEffect(() => {
+    const Notifications = getNotifications();
+    if (!Notifications) {
+      return;
+    }
+
     const last = Notifications.getLastNotificationResponse();
 
     if (last?.notification) {

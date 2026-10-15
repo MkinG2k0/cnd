@@ -1,21 +1,18 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+
+import { getNotifications } from "./module";
 
 export const PUSH_TOKEN_KEY = "cnd.push.token";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
-
 export async function registerForPushNotificationsAsync() {
+  const Notifications = getNotifications();
+  if (!Notifications) {
+    return null;
+  }
+
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",

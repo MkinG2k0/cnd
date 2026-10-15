@@ -2,40 +2,43 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a private multi-tenant headless CMS (Next.js admin + API + thin SDK) with DB-stored schemas, draft/publish, and per-project `db`/`s3` media storage so clients get only URL + login.
+**Goal:** Build a private multi-tenant headless CMS as a single Next.js app (admin UI + REST API) with DB-stored schemas, draft/publish, and per-project `db`/`s3` media — clients get only URL + login; consumer sites use plain `fetch`.
 
-**Architecture:** New pnpm monorepo at `D:\Project\studio\cms` with `apps/web` (Next.js App Router: admin UI + `/api/admin/*` + `/api/v1/*`) and `packages/sdk` (`createClient`). Postgres via Prisma; sessions in httpOnly cookies; API keys hashed; all rows scoped by `projectId`.
+**Architecture:** One clean Next.js repo (App Router). Admin pages + `/api/admin/*` (session cookie) + `/api/v1/*` (API key). Postgres via Prisma. No monorepo, no SDK package — sites call the public API with `fetch`.
 
-**Tech Stack:** Next.js 15+, React 19, TypeScript, Prisma, PostgreSQL, argon2, Vitest, pnpm workspaces, `@aws-sdk/client-s3` (S3 adapter), TipTap or textarea-based HTML for `richtext` MVP.
+**Tech Stack:** Next.js (current stable), React, TypeScript, Prisma, PostgreSQL, argon2, Zod, Vitest, `@aws-sdk/client-s3` (S3 adapter), HTML `<textarea>` for `richtext` MVP.
 
 ## Global Constraints
 
-- Everything on Next.js — no Nest/Hono/separate API service
-- One shared Postgres for all projects; schemas live in DB (`content_types.fields` JSON)
+- Single Next.js project — no Nest/Hono, no pnpm workspaces, no `packages/sdk`
+- Consumer integration: plain `fetch` + `Authorization: Bearer <apiKey>` (document in README)
+- One shared Postgres for all projects; schemas in DB (`content_types.fields` JSON)
 - Roles only: `superadmin` | `editor` (editor: content + media only)
 - Field types MVP: `string`, `text`, `number`, `boolean`, `image`, `file`, `reference`, `array`, `richtext` (HTML string), `slug`, `datetime`, `object` (one nesting level)
 - Public API returns published data only; filters: `type`, `limit`, `offset`
 - Storage driver per project: `db` | `s3`; public media always via `/api/v1/:projectId/media/:id`
 - Password hashing: argon2; API keys stored as hash; CORS allowlist on project (empty = deny browser origins)
-- Out of scope: version history, draft preview, webhooks, i18n, page builder, Sanity migration
-- Spec: `docs/superpowers/specs/2026-10-12-custom-cms-design.md` (in cnd repo; copy or link from cms README)
+- Out of scope: SDK package, version history, draft preview, webhooks, i18n, page builder, Sanity migration
+- Spec reference: `docs/superpowers/specs/2026-10-12-custom-cms-design.md` (amendment: fetch instead of SDK)
 
 ---
 
-## File Structure (new repo `D:\Project\studio\cms`)
+## File Structure (new repo — push this as the CMS project)
 
 ```
-cms/
-  package.json                 # pnpm workspace root
-  pnpm-workspace.yaml
+/
+  package.json
   .env.example
-  apps/web/
-    package.json
-    prisma/schema.prisma
-    prisma/seed.ts
-    src/app/
+  .gitignore
+  README.md
+  prisma/
+    schema.prisma
+    seed.ts
+  vitest.config.ts
+  src/
+    app/
       layout.tsx
-      page.tsx                  # redirect → /projects or /login
+      page.tsx                          # → /projects or /login
       login/page.tsx
       projects/page.tsx
       projects/[projectId]/page.tsx
@@ -64,7 +67,7 @@ cms/
       api/v1/[projectId]/entries/by-slug/[type]/[slug]/route.ts
       api/v1/[projectId]/types/route.ts
       api/v1/[projectId]/media/[mediaId]/route.ts
-    src/lib/
+    lib/
       db.ts
       auth/password.ts
       auth/session.ts
@@ -72,6 +75,7 @@ cms/
       auth/api-key.ts
       auth/rate-limit.ts
       tenancy.ts
+      cors.ts
       schema/field-types.ts
       schema/validate-type.ts
       schema/validate-entry.ts
@@ -80,65 +84,37 @@ cms/
       storage/db-driver.ts
       storage/s3-driver.ts
       storage/index.ts
-      cors.ts
-    src/components/
+    components/
       login-form.tsx
       project-form.tsx
       schema-builder.tsx
       entry-form.tsx
       media-picker.tsx
       status-badge.tsx
-    vitest.config.ts
-    src/lib/**/*.test.ts
-  packages/sdk/
-    package.json
-    src/index.ts
-    src/client.ts
-    src/client.test.ts
-    tsconfig.json
+    lib/**/*.test.ts
+  scripts/
+    smoke.ts
 ```
 
 ---
 
-### Task 1: Scaffold monorepo + Prisma schema
+### Task 1: Scaffold Next.js + Prisma schema
 
 **Files:**
-- Create: `D:\Project\studio\cms/package.json`
-- Create: `D:\Project\studio\cms/pnpm-workspace.yaml`
-- Create: `D:\Project\studio\cms/.env.example`
-- Create: `D:\Project\studio\cms/.gitignore`
-- Create: `D:\Project\studio\cms/apps/web/package.json`
-- Create: `D:\Project\studio\cms/apps/web/prisma/schema.prisma`
-- Create: `D:\Project\studio\cms/apps/web/src/lib/db.ts`
-- Create: `D:\Project\studio\cms/README.md`
+- Create: `package.json`, `.env.example`, `.gitignore`, `README.md`
+- Create: `prisma/schema.prisma`
+- Create: `src/lib/db.ts`
 
 **Interfaces:**
 - Consumes: none
-- Produces: Prisma models `User`, `Project`, `ProjectMember`, `ApiKey`, `ContentType`, `Entry`, `Media`, `MediaBlob`, `Session`; `getDb()` singleton
+- Produces: Prisma models + `getDb()`
 
-- [ ] **Step 1: Create repo root and workspace files**
+- [ ] **Step 1: Create Next.js app in empty folder**
 
-```json
-// package.json
-{
-  "name": "studio-cms",
-  "private": true,
-  "scripts": {
-    "dev": "pnpm --filter @studio-cms/web dev",
-    "build": "pnpm --filter @studio-cms/sdk build && pnpm --filter @studio-cms/web build",
-    "test": "pnpm -r test",
-    "db:migrate": "pnpm --filter @studio-cms/web exec prisma migrate dev",
-    "db:seed": "pnpm --filter @studio-cms/web exec prisma db seed"
-  },
-  "packageManager": "pnpm@9.15.0"
-}
-```
-
-```yaml
-# pnpm-workspace.yaml
-packages:
-  - "apps/*"
-  - "packages/*"
+```bash
+pnpm dlx create-next-app@latest . --typescript --eslint --app --src-dir --tailwind --turbopack --import-alias "@/*" --use-pnpm --yes
+pnpm add @prisma/client argon2 zod
+pnpm add -D prisma vitest tsx @types/node
 ```
 
 ```env
@@ -149,26 +125,28 @@ SUPERADMIN_EMAIL=admin@example.com
 SUPERADMIN_PASSWORD=change-me
 ```
 
-- [ ] **Step 2: Scaffold Next.js app**
-
-Run from `D:\Project\studio\cms`:
-
-```bash
-pnpm dlx create-next-app@latest apps/web --typescript --eslint --app --src-dir --tailwind --turbopack --import-alias "@/*" --use-pnpm --yes
+```json
+// package.json scripts (add)
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "smoke": "tsx scripts/smoke.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}
 ```
 
-Then set `apps/web/package.json` name to `@studio-cms/web` and add deps:
-
-```bash
-cd apps/web
-pnpm add @prisma/client argon2 zod uuid
-pnpm add -D prisma vitest @types/uuid
-```
-
-- [ ] **Step 3: Write Prisma schema**
+- [ ] **Step 2: Prisma schema**
 
 ```prisma
-// apps/web/prisma/schema.prisma
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -279,15 +257,15 @@ model Entry {
 }
 
 model Media {
-  id          String     @id @default(cuid())
-  projectId   String
-  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  filename    String
-  mimeType    String
-  size        Int
-  storageKey  String
-  blob        MediaBlob?
-  createdAt   DateTime   @default(now())
+  id         String     @id @default(cuid())
+  projectId  String
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  filename   String
+  mimeType   String
+  size       Int
+  storageKey String
+  blob       MediaBlob?
+  createdAt  DateTime   @default(now())
 }
 
 model MediaBlob {
@@ -298,10 +276,10 @@ model MediaBlob {
 }
 ```
 
-- [ ] **Step 4: Add db helper and migrate**
+- [ ] **Step 3: db helper + migrate**
 
 ```ts
-// apps/web/src/lib/db.ts
+// src/lib/db.ts
 import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
@@ -314,22 +292,20 @@ export function getDb() {
 }
 ```
 
-Copy `.env.example` → `apps/web/.env` (and root `.env` if preferred). Run:
-
 ```bash
-cd D:\Project\studio\cms\apps\web
-pnpm exec prisma migrate dev --name init
+cp .env.example .env
+pnpm db:migrate
+# name: init
 ```
 
-Expected: migration applied, client generated.
+Expected: migration applied.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-cd D:\Project\studio\cms
 git init
 git add .
-git commit -m "chore: scaffold cms monorepo with prisma schema"
+git commit -m "chore: scaffold Next.js CMS with Prisma schema"
 ```
 
 ---
@@ -337,34 +313,20 @@ git commit -m "chore: scaffold cms monorepo with prisma schema"
 ### Task 2: Password hashing + session auth
 
 **Files:**
-- Create: `apps/web/src/lib/auth/password.ts`
-- Create: `apps/web/src/lib/auth/session.ts`
-- Create: `apps/web/src/lib/auth/require-user.ts`
-- Create: `apps/web/src/lib/auth/password.test.ts`
-- Create: `apps/web/src/lib/auth/session.test.ts`
-- Create: `apps/web/src/app/api/admin/auth/login/route.ts`
-- Create: `apps/web/src/app/api/admin/auth/logout/route.ts`
-- Create: `apps/web/src/app/api/admin/auth/me/route.ts`
-- Create: `apps/web/src/app/login/page.tsx`
-- Create: `apps/web/src/components/login-form.tsx`
-- Create: `apps/web/prisma/seed.ts`
-- Create: `apps/web/vitest.config.ts`
+- Create: `src/lib/auth/password.ts`, `session.ts`, `require-user.ts`
+- Create: `src/lib/auth/password.test.ts`
+- Create: `src/app/api/admin/auth/login/route.ts`, `logout/route.ts`, `me/route.ts`
+- Create: `src/app/login/page.tsx`, `src/components/login-form.tsx`
+- Create: `prisma/seed.ts`, `vitest.config.ts`
 
 **Interfaces:**
-- Consumes: `getDb()`
-- Produces:
-  - `hashPassword(plain: string): Promise<string>`
-  - `verifyPassword(plain: string, hash: string): Promise<boolean>`
-  - `createSession(userId: string): Promise<string>` // raw token
-  - `destroySession(rawToken: string): Promise<void>`
-  - `getSessionUser(rawToken: string | undefined): Promise<User | null>`
-  - `requireUser(req): Promise<User>` / `requireSuperadmin(req)`
-  - Cookie name: `cms_session`
+- Produces: `hashPassword`, `verifyPassword`, `createSession`, `destroySession`, `getSessionUser`, `requireUser`, `requireSuperadmin`
+- Cookie: `cms_session`
 
-- [ ] **Step 1: Write failing password tests**
+- [ ] **Step 1: Failing password test**
 
 ```ts
-// apps/web/src/lib/auth/password.test.ts
+// src/lib/auth/password.test.ts
 import { describe, expect, it } from "vitest";
 import { hashPassword, verifyPassword } from "./password";
 
@@ -378,18 +340,16 @@ describe("password", () => {
 });
 ```
 
-- [ ] **Step 2: Run test — expect FAIL**
-
 ```bash
-cd apps/web && pnpm exec vitest run src/lib/auth/password.test.ts
+pnpm test src/lib/auth/password.test.ts
 ```
 
-Expected: FAIL module not found / export missing.
+Expected: FAIL until implemented.
 
-- [ ] **Step 3: Implement password + session helpers**
+- [ ] **Step 2: Implement auth**
 
 ```ts
-// apps/web/src/lib/auth/password.ts
+// src/lib/auth/password.ts
 import argon2 from "argon2";
 
 export async function hashPassword(plain: string) {
@@ -402,7 +362,7 @@ export async function verifyPassword(plain: string, hash: string) {
 ```
 
 ```ts
-// apps/web/src/lib/auth/session.ts
+// src/lib/auth/session.ts
 import { createHash, randomBytes } from "crypto";
 import { cookies } from "next/headers";
 import { getDb } from "@/lib/db";
@@ -455,14 +415,16 @@ export async function clearSessionCookie() {
 ```
 
 ```ts
-// apps/web/src/lib/auth/require-user.ts
+// src/lib/auth/require-user.ts
 import { cookies } from "next/headers";
 import { getSessionUser, SESSION_COOKIE } from "./session";
 
 export async function requireUser() {
   const jar = await cookies();
   const user = await getSessionUser(jar.get(SESSION_COOKIE)?.value);
-  if (!user) throw new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
+  if (!user) {
+    throw new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
+  }
   return user;
 }
 
@@ -475,12 +437,12 @@ export async function requireSuperadmin() {
 }
 ```
 
-Wire login/logout/me routes: login verifies email/password → `createSession` → `setSessionCookie`; logout destroys; me returns `{ id, email, role }`.
+Login route: verify email/password → `createSession` → `setSessionCookie`. Logout clears. Me returns `{ id, email, role }`.
 
-- [ ] **Step 4: Seed superadmin**
+- [ ] **Step 3: Seed + login UI**
 
 ```ts
-// apps/web/prisma/seed.ts
+// prisma/seed.ts
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/auth/password";
 
@@ -500,64 +462,42 @@ async function main() {
 main().finally(() => db.$disconnect());
 ```
 
-Add to `apps/web/package.json`:
-
-```json
-"prisma": { "seed": "tsx prisma/seed.ts" }
-```
-
 ```bash
-pnpm add -D tsx
-pnpm exec prisma db seed
-```
-
-- [ ] **Step 5: Login page + form**
-
-Minimal client form POSTs to `/api/admin/auth/login` with `{ email, password }`, redirects to `/projects` on 200.
-
-- [ ] **Step 6: Run tests + manual check**
-
-```bash
-pnpm exec vitest run src/lib/auth
+pnpm db:seed
+pnpm test
 pnpm dev
 ```
 
-Open `/login`, sign in with seed creds, `GET /api/admin/auth/me` returns user.
+Login at `/login` with seed creds; `GET /api/admin/auth/me` returns user.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add apps/web
-git commit -m "feat: add argon2 auth, sessions, and login"
+git add .
+git commit -m "feat: argon2 auth, sessions, login"
 ```
 
 ---
 
-### Task 3: Projects, members, tenancy helpers
+### Task 3: Projects, members, tenancy
 
 **Files:**
-- Create: `apps/web/src/lib/tenancy.ts`
-- Create: `apps/web/src/lib/tenancy.test.ts`
-- Create: `apps/web/src/app/api/admin/projects/route.ts`
-- Create: `apps/web/src/app/api/admin/projects/[projectId]/route.ts`
-- Create: `apps/web/src/app/api/admin/projects/[projectId]/members/route.ts`
-- Create: `apps/web/src/app/projects/page.tsx`
-- Create: `apps/web/src/app/projects/[projectId]/page.tsx`
-- Create: `apps/web/src/app/projects/[projectId]/members/page.tsx`
-- Create: `apps/web/src/components/project-form.tsx`
+- Create: `src/lib/tenancy.ts`, `tenancy.test.ts`
+- Create: `src/app/api/admin/projects/route.ts`
+- Create: `src/app/api/admin/projects/[projectId]/route.ts`
+- Create: `src/app/api/admin/projects/[projectId]/members/route.ts`
+- Create: `src/app/projects/page.tsx`, `projects/[projectId]/page.tsx`, `.../members/page.tsx`
+- Create: `src/components/project-form.tsx`
 
 **Interfaces:**
-- Consumes: `requireUser`, `requireSuperadmin`, `getDb`, `hashPassword`
-- Produces:
-  - `assertProjectAccess(user, projectId): Promise<Project>`
-  - Admin: `GET/POST /api/admin/projects`
-  - Admin: `GET/PATCH /api/admin/projects/:projectId`
-  - Admin: `POST /api/admin/projects/:projectId/members` body `{ email, password? }`
+- Produces: `canAccessProject`, `assertProjectAccess`
+- `POST /api/admin/projects` body: `{ name, slug, storageDriver, s3Bucket?, s3Region?, s3Prefix?, corsOrigins? }`
+- `POST .../members` body: `{ email, password? }`
 
-- [ ] **Step 1: Failing tenancy test**
+- [ ] **Step 1: Tenancy test + implement**
 
 ```ts
-// apps/web/src/lib/tenancy.test.ts
+// src/lib/tenancy.test.ts
 import { describe, expect, it } from "vitest";
 import { canAccessProject } from "./tenancy";
 
@@ -578,10 +518,8 @@ describe("canAccessProject", () => {
 });
 ```
 
-- [ ] **Step 2: Implement tenancy + routes**
-
 ```ts
-// apps/web/src/lib/tenancy.ts
+// src/lib/tenancy.ts
 import { getDb } from "@/lib/db";
 import type { Role } from "@prisma/client";
 
@@ -599,8 +537,9 @@ export async function assertProjectAccess(
 ) {
   const db = getDb();
   const project = await db.project.findUnique({ where: { id: projectId } });
-  if (!project) throw new Response(JSON.stringify({ error: "not_found" }), { status: 404 });
-
+  if (!project) {
+    throw new Response(JSON.stringify({ error: "not_found" }), { status: 404 });
+  }
   if (user.role === "superadmin") return project;
 
   const membership = await db.projectMember.findUnique({
@@ -613,27 +552,17 @@ export async function assertProjectAccess(
 }
 ```
 
-`POST /api/admin/projects` (superadmin only):
+`GET /api/admin/projects`: superadmin → all; editor → membership only. Members route: superadmin upserts editor user + membership.
 
-```ts
-// body
-{ name: string, slug: string, storageDriver: "db" | "s3", s3Bucket?: string, s3Region?: string, s3Prefix?: string, corsOrigins?: string[] }
-```
+- [ ] **Step 2: UI**
 
-`GET /api/admin/projects`: superadmin → all; editor → membership projects.
+Projects list/create (storage driver select). Dashboard hides types/keys/members for editors.
 
-`POST .../members` (superadmin): upsert user by email (create with password if new, role `editor`), create `ProjectMember`.
-
-- [ ] **Step 3: UI — projects list/create + members page**
-
-Superadmin sees create form (name, slug, storage driver select). Editor sees list only. Project dashboard links to types/keys/members/media/entries (hide types/keys/members for editor).
-
-- [ ] **Step 4: Test + commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-pnpm exec vitest run src/lib/tenancy.test.ts
-git add apps/web
-git commit -m "feat: projects, members, and tenancy checks"
+git add .
+git commit -m "feat: projects, members, tenancy"
 ```
 
 ---
@@ -641,40 +570,18 @@ git commit -m "feat: projects, members, and tenancy checks"
 ### Task 4: API keys
 
 **Files:**
-- Create: `apps/web/src/lib/auth/api-key.ts`
-- Create: `apps/web/src/lib/auth/api-key.test.ts`
-- Create: `apps/web/src/app/api/admin/projects/[projectId]/keys/route.ts`
-- Create: `apps/web/src/app/projects/[projectId]/keys/page.tsx`
+- Create: `src/lib/auth/api-key.ts`, `api-key.test.ts`
+- Create: `src/app/api/admin/projects/[projectId]/keys/route.ts`
+- Create: `src/app/projects/[projectId]/keys/page.tsx`
 
 **Interfaces:**
-- Consumes: `requireSuperadmin`, `assertProjectAccess` (superadmin path)
-- Produces:
-  - `generateApiKey(): { raw: string, prefix: string, hash: string }`
-  - `verifyApiKey(raw: string): Promise<{ projectId: string } | null>`
-  - `POST /api/admin/projects/:projectId/keys` → `{ id, label, prefix, raw }` (raw once)
-  - `GET` list `{ id, label, prefix, createdAt }`
-  - `DELETE` by id
+- Produces: `generateApiKey()`, `hashApiKey()`, `verifyApiKey(raw)`
+- Raw key shown once on create; format `cms_...`
 
-- [ ] **Step 1: Failing test for key format**
+- [ ] **Step 1: Test + implement**
 
 ```ts
-import { describe, expect, it } from "vitest";
-import { generateApiKey, hashApiKey } from "./api-key";
-
-describe("api-key", () => {
-  it("generates cms_ prefix and stable hash", () => {
-    const { raw, prefix, hash } = generateApiKey();
-    expect(raw.startsWith("cms_")).toBe(true);
-    expect(prefix).toBe(raw.slice(0, 12));
-    expect(hash).toBe(hashApiKey(raw));
-  });
-});
-```
-
-- [ ] **Step 2: Implement**
-
-```ts
-// apps/web/src/lib/auth/api-key.ts
+// src/lib/auth/api-key.ts
 import { createHash, randomBytes } from "crypto";
 import { getDb } from "@/lib/db";
 
@@ -696,34 +603,29 @@ export async function verifyApiKey(raw: string) {
 }
 ```
 
-Routes: superadmin only. UI shows raw key in a one-time banner after create.
+Superadmin-only routes: GET list, POST create, DELETE by id.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 2: Commit**
 
 ```bash
-git commit -am "feat: project API keys with hashed storage"
+git add .
+git commit -m "feat: hashed project API keys"
 ```
 
 ---
 
-### Task 5: Content type schema validation + admin CRUD
+### Task 5: Content type validation + admin CRUD
 
 **Files:**
-- Create: `apps/web/src/lib/schema/field-types.ts`
-- Create: `apps/web/src/lib/schema/validate-type.ts`
-- Create: `apps/web/src/lib/schema/validate-type.test.ts`
-- Create: `apps/web/src/app/api/admin/projects/[projectId]/types/route.ts`
-- Create: `apps/web/src/app/api/admin/projects/[projectId]/types/[typeId]/route.ts`
+- Create: `src/lib/schema/field-types.ts`, `validate-type.ts`, `validate-type.test.ts`
+- Create: `src/app/api/admin/projects/[projectId]/types/route.ts`
+- Create: `src/app/api/admin/projects/[projectId]/types/[typeId]/route.ts`
 
 **Interfaces:**
-- Consumes: `requireSuperadmin`, `assertProjectAccess`
-- Produces:
-  - `FieldType` union and Zod schemas
-  - `parseContentTypeInput(input): ContentTypeDef` throws ZodError
-  - CRUD types under `/api/admin/projects/:projectId/types`
+- Produces: `FIELD_TYPES`, `FieldDef`, `ContentTypeDef`, `parseContentTypeInput`
 
 ```ts
-// apps/web/src/lib/schema/field-types.ts
+// src/lib/schema/field-types.ts
 export const FIELD_TYPES = [
   "string", "text", "number", "boolean", "image", "file",
   "reference", "array", "richtext", "slug", "datetime", "object",
@@ -735,10 +637,10 @@ export type FieldDef = {
   title: string;
   type: FieldType;
   required?: boolean;
-  from?: string;       // slug source
-  of?: FieldType;      // array item type (not object/array)
-  referenceTo?: string; // content type name
-  fields?: FieldDef[]; // object children (scalars/media/reference only)
+  from?: string;
+  of?: FieldType;
+  referenceTo?: string;
+  fields?: FieldDef[];
   order: number;
 };
 
@@ -749,7 +651,7 @@ export type ContentTypeDef = {
 };
 ```
 
-- [ ] **Step 1: Tests for invalid nested array/object and bad names**
+- [ ] **Step 1: Validation tests**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -782,21 +684,13 @@ describe("parseContentTypeInput", () => {
 });
 ```
 
-- [ ] **Step 2: Implement Zod validation + routes**
+Rules: name `/^[a-z][a-z0-9_]*$/`; unique field names; `object`/`array` one level only; `slug.from` must exist. Superadmin CRUD only.
 
-Rules:
-- `name`: `/^[a-z][a-z0-9_]*$/`
-- unique field names per type
-- `object.fields` cannot contain `object` or `array`
-- `array.of` cannot be `object` or `array`
-- `slug.from` must reference another field name on same type
-
-`POST/GET` collection; `PATCH/DELETE` by `typeId`. Superadmin only.
-
-- [ ] **Step 3: Commit**
+- [ ] **Step 2: Commit**
 
 ```bash
-git commit -am "feat: content type validation and admin CRUD API"
+git add .
+git commit -m "feat: content type validation and admin API"
 ```
 
 ---
@@ -804,31 +698,20 @@ git commit -am "feat: content type validation and admin CRUD API"
 ### Task 6: Schema builder UI
 
 **Files:**
-- Create: `apps/web/src/components/schema-builder.tsx`
-- Create: `apps/web/src/app/projects/[projectId]/types/page.tsx`
+- Create: `src/components/schema-builder.tsx`
+- Create: `src/app/projects/[projectId]/types/page.tsx`
 
 **Interfaces:**
 - Consumes: types admin API
-- Produces: UI to create type, add/edit/remove fields, move order up/down, save
+- Produces: create/edit type, add/remove fields, ↑↓ order, save; 403 for editors
 
-- [ ] **Step 1: Build client schema builder**
+- [ ] **Step 1: Build UI + manual check** — create `product` schema from spec example, reload persists
 
-State: current `ContentTypeDef`. Controls:
-- Add field: name, title, type select, required checkbox
-- Extra inputs when type is `slug` (`from`), `array` (`of`), `reference` (`referenceTo`), `object` (nested field list)
-- ↑ / ↓ buttons mutate `order` then sort
-- Save → `POST` or `PATCH`
-
-Gate page: if `me.role !== 'superadmin'` → 403 UI.
-
-- [ ] **Step 2: Manual verify**
-
-Create type `product` with fields from spec example. Reload page — fields persist from GET.
-
-- [ ] **Step 3: Commit**
+- [ ] **Step 2: Commit**
 
 ```bash
-git commit -am "feat: schema builder UI for content types"
+git add .
+git commit -m "feat: schema builder UI"
 ```
 
 ---
@@ -836,37 +719,31 @@ git commit -am "feat: schema builder UI for content types"
 ### Task 7: Entry validation, CRUD, publish
 
 **Files:**
-- Create: `apps/web/src/lib/schema/validate-entry.ts`
-- Create: `apps/web/src/lib/schema/validate-entry.test.ts`
-- Create: `apps/web/src/lib/entries/status.ts`
-- Create: `apps/web/src/lib/entries/status.test.ts`
-- Create: `apps/web/src/app/api/admin/projects/[projectId]/entries/route.ts`
-- Create: `apps/web/src/app/api/admin/projects/[projectId]/entries/[entryId]/route.ts`
-- Create: `apps/web/src/app/api/admin/projects/[projectId]/entries/[entryId]/publish/route.ts`
+- Create: `src/lib/schema/validate-entry.ts`, `validate-entry.test.ts`
+- Create: `src/lib/entries/status.ts`, `status.test.ts`
+- Create: `src/app/api/admin/projects/[projectId]/entries/route.ts`
+- Create: `src/app/api/admin/projects/[projectId]/entries/[entryId]/route.ts`
+- Create: `src/app/api/admin/projects/[projectId]/entries/[entryId]/publish/route.ts`
 
 **Interfaces:**
-- Consumes: `assertProjectAccess`, content types, Zod
-- Produces:
-  - `validateEntryData(fields, data): unknown` (normalized draft)
-  - `entryUiStatus(entry): "draft" | "published" | "modified"`
-  - `POST /entries` `{ typeName, data }`
-  - `PATCH /entries/:id` `{ data }` → updates `dataDraft` only
-  - `POST /entries/:id/publish` → copy draft → published
+- Produces: `validateEntryData`, `entryUiStatus`
+- `POST/PATCH` update `dataDraft` only; `POST .../publish` copies to `dataPublished`
 
 ```ts
-// apps/web/src/lib/entries/status.ts
+// src/lib/entries/status.ts
 export function entryUiStatus(entry: {
   status: "draft" | "published";
   dataDraft: unknown;
   dataPublished: unknown | null;
 }) {
   if (entry.status === "draft" || entry.dataPublished == null) return "draft";
-  const same = JSON.stringify(entry.dataDraft) === JSON.stringify(entry.dataPublished);
+  const same =
+    JSON.stringify(entry.dataDraft) === JSON.stringify(entry.dataPublished);
   return same ? "published" : "modified";
 }
 ```
 
-- [ ] **Step 1: Tests for required fields + status**
+- [ ] **Step 1: Tests for required + status**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -897,38 +774,13 @@ describe("entryUiStatus", () => {
 });
 ```
 
-- [ ] **Step 2: Implement validation rules (MVP)**
+Validation: scalars by type; `image`/`file` = media id; `reference` = entry id; `array`/`object` per schema; slugify from `from` if empty; sync `Entry.slug` column.
 
-- `string`/`text`/`richtext`/`slug`: string
-- `number`: finite number
-- `boolean`: boolean
-- `datetime`: ISO string
-- `image`/`file`: media id string existing in same project (check in route layer)
-- `reference`: entry id string
-- `array`: array of item type
-- `object`: plain object matching child fields
-- Auto-set `slug` field from `from` source if empty (slugify)
-
-On create/update extract slug field value into `Entry.slug` column when present.
-
-Publish:
-
-```ts
-await db.entry.update({
-  where: { id },
-  data: {
-    dataPublished: entry.dataDraft,
-    status: "published",
-  },
-});
-```
-
-Editors + superadmin with project access.
-
-- [ ] **Step 3: Commit**
+- [ ] **Step 2: Commit**
 
 ```bash
-git commit -am "feat: entry draft CRUD and publish"
+git add .
+git commit -m "feat: entry draft CRUD and publish"
 ```
 
 ---
@@ -936,65 +788,37 @@ git commit -am "feat: entry draft CRUD and publish"
 ### Task 8: Entry list/form UI
 
 **Files:**
-- Create: `apps/web/src/components/status-badge.tsx`
-- Create: `apps/web/src/components/entry-form.tsx`
-- Create: `apps/web/src/components/media-picker.tsx` (stub: text input for media id until Task 9; replace in Task 9)
-- Create: `apps/web/src/app/projects/[projectId]/entries/[type]/page.tsx`
-- Create: `apps/web/src/app/projects/[projectId]/entries/[type]/[entryId]/page.tsx`
+- Create: `src/components/status-badge.tsx`, `entry-form.tsx`, `media-picker.tsx`
+- Create: `src/app/projects/[projectId]/entries/[type]/page.tsx`
+- Create: `src/app/projects/[projectId]/entries/[type]/[entryId]/page.tsx`
 
 **Interfaces:**
-- Consumes: entries + types APIs, `entryUiStatus`
-- Produces: list + dynamic form Save / Publish
+- Dynamic form from schema; Save / Publish; badges `draft` | `published` | `modified`
+- Until Task 9, `MediaPicker` can accept media id string; replace with library after upload exists
 
-- [ ] **Step 1: Dynamic form renderer**
+- [ ] **Step 1: Form renderer + manual draft→publish path**
 
-Map field type → input:
-- string/slug/datetime → `<input>`
-- text/richtext → `<textarea>` (richtext: allow HTML; label “HTML”)
-- number → number input
-- boolean → checkbox
-- image/file → `MediaPicker`
-- reference → select loaded from `GET entries?type=referenceTo`
-- array → repeatable row of `of` control
-- object → nested fieldset
-
-Buttons: Save → PATCH; Publish → POST publish. Show `StatusBadge`.
-
-- [ ] **Step 2: Manual path**
-
-As editor: create entry, save draft (public API still empty — Task 10), publish, badge → published; edit title → modified; publish again → published.
-
-- [ ] **Step 3: Commit**
+- [ ] **Step 2: Commit**
 
 ```bash
-git commit -am "feat: entry list and schema-driven form UI"
+git add .
+git commit -m "feat: entry list and schema-driven form"
 ```
 
 ---
 
-### Task 9: Media storage adapters + admin upload
+### Task 9: Media storage (db | s3) + admin upload
 
 **Files:**
-- Create: `apps/web/src/lib/storage/types.ts`
-- Create: `apps/web/src/lib/storage/db-driver.ts`
-- Create: `apps/web/src/lib/storage/s3-driver.ts`
-- Create: `apps/web/src/lib/storage/index.ts`
-- Create: `apps/web/src/lib/storage/storage.test.ts`
-- Create: `apps/web/src/app/api/admin/projects/[projectId]/media/route.ts`
-- Create: `apps/web/src/app/api/admin/projects/[projectId]/media/[mediaId]/route.ts`
-- Create: `apps/web/src/app/projects/[projectId]/media/page.tsx`
-- Modify: `apps/web/src/components/media-picker.tsx`
+- Create: `src/lib/storage/types.ts`, `db-driver.ts`, `s3-driver.ts`, `index.ts`, `storage.test.ts`
+- Create: `src/app/api/admin/projects/[projectId]/media/route.ts`
+- Create: `src/app/api/admin/projects/[projectId]/media/[mediaId]/route.ts`
+- Create: `src/app/projects/[projectId]/media/page.tsx`
+- Modify: `src/components/media-picker.tsx`
 
 **Interfaces:**
-- Consumes: project `storageDriver`, optional S3 env/project fields
-- Produces:
-  - `getStorageDriver(project): StorageDriver`
-  - `StorageDriver.put({ projectId, filename, mimeType, bytes }): { storageKey }`
-  - `StorageDriver.get(storageKey): Promise<Uint8Array | { redirectUrl: string }>`
-  - `StorageDriver.delete(storageKey): Promise<void>`
 
 ```ts
-// apps/web/src/lib/storage/types.ts
 export type StoredObject =
   | { kind: "bytes"; data: Uint8Array; mimeType: string }
   | { kind: "redirect"; url: string };
@@ -1007,17 +831,12 @@ export interface StorageDriver {
     mimeType: string;
     bytes: Uint8Array;
   }): Promise<{ storageKey: string }>;
-  get(input: {
-    storageKey: string;
-    mimeType: string;
-  }): Promise<StoredObject>;
+  get(input: { storageKey: string; mimeType: string }): Promise<StoredObject>;
   delete(storageKey: string): Promise<void>;
 }
 ```
 
-- [ ] **Step 1: Unit test db driver with Prisma mock or integration**
-
-Prefer integration test skipped without DB; unit-test `getStorageDriver` selection:
+- [ ] **Step 1: Driver selection test + implement db/s3**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -1031,23 +850,16 @@ describe("resolveDriverName", () => {
 });
 ```
 
-- [ ] **Step 2: Implement drivers**
+`db`: blob in `MediaBlob`. `s3`: `@aws-sdk/client-s3`, key `${prefix}${projectId}/${mediaId}/${filename}`; env `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT` optional.
 
-`db-driver`: `storageKey = mediaId`; write/read `MediaBlob.data`.
+- [ ] **Step 2: Upload API + media library + MediaPicker**
 
-`s3-driver`: use `@aws-sdk/client-s3` `PutObject`/`GetObject`/`DeleteObject`; key = `${s3Prefix}${projectId}/${mediaId}/${filename}`; `get` may return `{ kind: "redirect", url: signedOrPublic }`. Env fallbacks: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT` (for R2/MinIO).
-
-Admin `POST` multipart form field `file` → create `Media` + put bytes. `GET` list. `DELETE` removes storage + row.
-
-- [ ] **Step 3: Media library page + wire MediaPicker**
-
-Picker opens project media list, upload button, returns selected `media.id`.
-
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-pnpm --filter @studio-cms/web add @aws-sdk/client-s3
-git commit -am "feat: db and s3 media storage adapters"
+pnpm add @aws-sdk/client-s3
+git add .
+git commit -m "feat: db and s3 media storage"
 ```
 
 ---
@@ -1055,18 +867,12 @@ git commit -am "feat: db and s3 media storage adapters"
 ### Task 10: Public API v1 + CORS + rate limit
 
 **Files:**
-- Create: `apps/web/src/lib/auth/rate-limit.ts`
-- Create: `apps/web/src/lib/cors.ts`
-- Create: `apps/web/src/app/api/v1/[projectId]/entries/route.ts`
-- Create: `apps/web/src/app/api/v1/[projectId]/entries/[entryId]/route.ts`
-- Create: `apps/web/src/app/api/v1/[projectId]/entries/by-slug/[type]/[slug]/route.ts`
-- Create: `apps/web/src/app/api/v1/[projectId]/types/route.ts`
-- Create: `apps/web/src/app/api/v1/[projectId]/media/[mediaId]/route.ts`
-- Create: `apps/web/src/lib/auth/public-api.test.ts` (helpers)
+- Create: `src/lib/auth/rate-limit.ts`, `src/lib/cors.ts`
+- Create: public routes under `src/app/api/v1/[projectId]/...`
 
 **Interfaces:**
-- Consumes: `verifyApiKey`, storage `get`, entries published
-- Produces: public JSON shape:
+- Auth: `Authorization: Bearer <apiKey>`; key project must match URL
+- Response entry shape:
 
 ```ts
 type PublicEntry = {
@@ -1078,12 +884,17 @@ type PublicEntry = {
 };
 ```
 
-Auth: `Authorization: Bearer <rawApiKey>`; key’s `projectId` must match URL `projectId`.
+Endpoints:
+- `GET /api/v1/:projectId/entries?type=&limit=&offset=`
+- `GET /api/v1/:projectId/entries/:id`
+- `GET /api/v1/:projectId/entries/by-slug/:type/:slug`
+- `GET /api/v1/:projectId/types`
+- `GET /api/v1/:projectId/media/:id`
 
-- [ ] **Step 1: Implement bearer guard + rate limit**
+- [ ] **Step 1: Rate limit + CORS helpers**
 
 ```ts
-// apps/web/src/lib/auth/rate-limit.ts
+// src/lib/auth/rate-limit.ts
 const hits = new Map<string, { count: number; resetAt: number }>();
 
 export function rateLimit(key: string, limit = 120, windowMs = 60_000) {
@@ -1100,10 +911,10 @@ export function rateLimit(key: string, limit = 120, windowMs = 60_000) {
 ```
 
 ```ts
-// apps/web/src/lib/cors.ts
+// src/lib/cors.ts
 export function corsHeaders(origin: string | null, allowlist: string[]) {
   if (!origin || allowlist.length === 0 || !allowlist.includes(origin)) {
-    return {};
+    return {} as Record<string, string>;
   }
   return {
     "Access-Control-Allow-Origin": origin,
@@ -1114,167 +925,91 @@ export function corsHeaders(origin: string | null, allowlist: string[]) {
 }
 ```
 
-Handle `OPTIONS` on public routes.
+- [ ] **Step 2: Handlers — published only; media streams or redirects**
 
-- [ ] **Step 2: Entries handlers**
+Media ids in JSON stay as ids. Site builds URL:  
+`${CMS_URL}/api/v1/${projectId}/media/${mediaId}`
 
-- List: `where: { projectId, typeName, status: published, dataPublished: { not: null } }`, map to `PublicEntry`
-- Get by id / by slug: 404 if not published
-- Types: return `{ name, title, fields }` for project
-- Media: load media + driver.get → if bytes, `new Response(data, { headers: { "Content-Type": mime } })`; if redirect, `Response.redirect(url, 302)`
-
-Rewrite media ids inside `data`? **MVP:** store media ids in JSON; SDK/helper `mediaUrl(id)` builds `/api/v1/:projectId/media/:id`. Document in README.
-
-- [ ] **Step 3: Manual curl**
+- [ ] **Step 3: Manual fetch check**
 
 ```bash
-curl -H "Authorization: Bearer cms_..." "http://localhost:3000/api/v1/<projectId>/entries?type=product"
+curl -H "Authorization: Bearer cms_..." \
+  "http://localhost:3000/api/v1/<projectId>/entries?type=product"
 ```
 
-Expected: only published entries. Draft-only entry absent.
+Expected: only published entries.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git commit -am "feat: public v1 API with CORS and rate limits"
+git add .
+git commit -m "feat: public v1 API with CORS and rate limits"
 ```
 
 ---
 
-### Task 11: SDK package
+### Task 11: README fetch examples + smoke script
 
 **Files:**
-- Create: `packages/sdk/package.json`
-- Create: `packages/sdk/tsconfig.json`
-- Create: `packages/sdk/src/client.ts`
-- Create: `packages/sdk/src/index.ts`
-- Create: `packages/sdk/src/client.test.ts`
+- Create: `scripts/smoke.ts`
+- Modify: `README.md`
+- Modify: `src/app/page.tsx` (auth redirect)
 
 **Interfaces:**
-- Consumes: public API
-- Produces:
+- No SDK — document fetch helpers sites can copy
+- Smoke proves success criteria with `fetch`
+
+- [ ] **Step 1: README site integration section**
 
 ```ts
-export type CmsClient = {
-  getEntries(type: string, opts?: { limit?: number; offset?: number }): Promise<PublicEntry[]>;
-  getEntry(id: string): Promise<PublicEntry>;
-  getEntryBySlug(type: string, slug: string): Promise<PublicEntry>;
-  getTypes(): Promise<Array<{ name: string; title: string; fields: unknown }>>;
-  mediaUrl(mediaId: string): string;
-};
+// example for a Next.js site (Server Component / route handler)
+const CMS_URL = process.env.CMS_URL!;
+const PROJECT_ID = process.env.CMS_PROJECT_ID!;
+const API_KEY = process.env.CMS_API_KEY!;
 
-export function createClient(options: {
-  baseUrl: string;
-  projectId: string;
-  apiKey: string;
-  fetch?: typeof fetch;
-}): CmsClient;
-```
+export async function getEntries(type: string) {
+  const res = await fetch(
+    `${CMS_URL}/api/v1/${PROJECT_ID}/entries?type=${encodeURIComponent(type)}`,
+    {
+      headers: { Authorization: `Bearer ${API_KEY}` },
+      next: { revalidate: 60 },
+    },
+  );
+  if (!res.ok) throw new Error(`CMS ${res.status}`);
+  return res.json();
+}
 
-- [ ] **Step 1: Failing test with mock fetch**
-
-```ts
-import { describe, expect, it, vi } from "vitest";
-import { createClient } from "./client";
-
-describe("createClient", () => {
-  it("calls entries endpoint with bearer token", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify([{ id: "1", type: "product", slug: "a", data: {}, updatedAt: "x" }]), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
-    );
-    const cms = createClient({
-      baseUrl: "http://cms.test",
-      projectId: "p1",
-      apiKey: "cms_test",
-      fetch: fetchMock as unknown as typeof fetch,
-    });
-    const rows = await cms.getEntries("product");
-    expect(rows).toHaveLength(1);
-    expect(fetchMock).toHaveBeenCalledWith(
-      "http://cms.test/api/v1/p1/entries?type=product",
-      expect.objectContaining({
-        headers: expect.objectContaining({ Authorization: "Bearer cms_test" }),
-      }),
-    );
-  });
-});
-```
-
-- [ ] **Step 2: Implement + build**
-
-```json
-// packages/sdk/package.json
-{
-  "name": "@studio-cms/sdk",
-  "version": "0.1.0",
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "vitest run"
-  },
-  "devDependencies": { "typescript": "^5", "vitest": "^3" }
+export function mediaUrl(mediaId: string) {
+  return `${CMS_URL}/api/v1/${PROJECT_ID}/media/${mediaId}`;
 }
 ```
+
+Also document: migrate, seed, login, create project, types, editor user, API key, publish, curl/fetch.
+
+- [ ] **Step 2: Smoke script**
+
+```ts
+// scripts/smoke.ts
+// 1) login superadmin
+// 2) create project A (db) + project B (db)
+// 3) create type + editor on A
+// 4) login editor, create entry, publish
+// 5) create API key; fetch public entries with fetch()
+// 6) B's key cannot read A's entries
+// print SMOKE_OK
+```
+
+```bash
+pnpm smoke
+```
+
+Expected: exit 0, `SMOKE_OK`.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add packages/sdk
-git commit -m "feat: add @studio-cms/sdk createClient"
-```
-
----
-
-### Task 12: End-to-end smoke script + README
-
-**Files:**
-- Create: `apps/web/scripts/smoke.ts`
-- Modify: `README.md`
-- Modify: `apps/web/src/app/page.tsx` (redirect logged-in → `/projects`, else `/login`)
-
-**Interfaces:**
-- Consumes: all prior tasks
-- Produces: script proving success criteria 1–5 against local server
-
-- [ ] **Step 1: Smoke script flow**
-
-```ts
-// apps/web/scripts/smoke.ts
-// 1) login as superadmin
-// 2) create project A (db) + project B (s3 or db)
-// 3) create type + editor member on A
-// 4) login as editor, create entry, publish
-// 5) create API key, fetch public entries via SDK
-// 6) ensure project B cannot read A’s entries with B’s key
-```
-
-Run:
-
-```bash
-pnpm --filter @studio-cms/web exec tsx scripts/smoke.ts
-```
-
-Expected: exit 0, prints `SMOKE_OK`.
-
-- [ ] **Step 2: README**
-
-Document:
-- `pnpm install`, Postgres, `pnpm db:migrate`, `pnpm db:seed`, `pnpm dev`
-- Client handoff: URL + email/password
-- Site integration example with `@studio-cms/sdk`
-- Storage driver notes (db vs s3 env vars)
-
-- [ ] **Step 3: Final commit**
-
-```bash
 git add .
-git commit -m "docs: README and smoke script for CMS MVP"
+git commit -m "docs: README fetch integration and smoke script"
 ```
 
 ---
@@ -1283,20 +1018,20 @@ git commit -m "docs: README and smoke script for CMS MVP"
 
 | Spec requirement | Task |
 |------------------|------|
-| Next.js admin + API only | 1 |
+| Single Next.js admin + API | 1 |
 | One Postgres, schemas in DB | 1, 5 |
-| Superadmin schema builder / editor content only | 2, 3, 5, 6, 7, 8 |
+| Superadmin schemas / editor content | 2–8 |
 | Draft → publish | 7, 8 |
-| REST + thin SDK | 10, 11 |
-| API keys hashed, session cookies, argon2 | 2, 4 |
-| Storage db \| s3 per project | 3, 9 |
+| REST + site via fetch (no SDK) | 10, 11 |
+| API keys hashed, sessions, argon2 | 2, 4 |
+| Storage db \| s3 | 3, 9 |
 | Public media opaque URL | 9, 10 |
-| CORS allowlist + rate limit | 10 |
-| Success criteria 1–5 | 12 |
-| No Sanity migration / versions / webhooks | excluded |
+| CORS + rate limit | 10 |
+| Success criteria | 11 |
+| No monorepo / no SDK package | enforced globally |
 
 ## Self-review notes
 
-- Types/names aligned: `dataDraft` / `dataPublished`, `typeName`, `createClient`, `entryUiStatus`, `cms_session`
-- No separate Nest service anywhere in tasks
-- S3 project without credentials will fail upload clearly — acceptable; smoke may use `db` for both projects if S3 unavailable
+- Paths are repo-root (`src/...`, `prisma/...`) — ready to push as a new GitHub project
+- Integration is copy-paste `fetch` helpers in consumer sites
+- S3 optional at smoke time — both projects may use `db` if S3 unavailable

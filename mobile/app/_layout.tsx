@@ -1,8 +1,10 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import 'react-native-reanimated';
 
+import { AppHeader } from '@/src/components/AppHeader';
 import { FavoritesProvider } from '@/hooks/useFavorites';
 import { useNotificationObserver } from '@/src/notifications/observer';
 import { registerForPushNotificationsAsync } from '@/src/notifications/register';
@@ -30,27 +32,33 @@ export default function RootLayout() {
 
   return (
     <FavoritesProvider>
-      <StatusBar style="light" />
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="zhk/[slug]"
-          options={{
-            title: 'Жилой комплекс',
-            headerTintColor: colors.surface,
-            headerStyle: { backgroundColor: colors.forest },
-          }}
-        />
-        <Stack.Screen
-          name="quiz"
-          options={{
-            title: 'Анкета',
-            presentation: 'modal',
-            headerTintColor: colors.surface,
-            headerStyle: { backgroundColor: colors.forest },
-          }}
-        />
-      </Stack>
+      <StatusBar style="dark" />
+      <View style={styles.shell}>
+        <AppHeader />
+        <View style={styles.body}>
+          <Stack screenOptions={{ headerShown: false, contentStyle: styles.screen }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="zhk/[slug]" />
+            <Stack.Screen name="quiz" />
+          </Stack>
+        </View>
+      </View>
     </FavoritesProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  shell: {
+    backgroundColor: colors.surface,
+    flex: 1,
+    overflow: "visible",
+    position: "relative",
+  },
+  body: {
+    flex: 1,
+    zIndex: 0,
+  },
+  screen: {
+    backgroundColor: colors.surface,
+  },
+});

@@ -15,12 +15,11 @@ import { ErrorState } from "@/src/components/ErrorState";
 import { phoneHref } from "@/src/lib/format";
 import type { SiteSettings } from "@/src/lib/types";
 import { whatsappURL } from "@/src/lib/whatsapp";
-import { colors, spacing } from "@/src/theme/tokens";
+import { colors, fontFamily, spacing } from "@/src/theme/tokens";
 
-type Channel = {
+type Social = {
   key: string;
   label: string;
-  value: string;
   onPress: () => void;
 };
 
@@ -28,23 +27,13 @@ function hasText(value: string) {
   return value.trim().length > 0;
 }
 
-function buildChannels(contacts: SiteSettings["contacts"]): Channel[] {
-  const channels: Channel[] = [];
-
-  if (hasText(contacts.phone)) {
-    channels.push({
-      key: "phone",
-      label: "Телефон",
-      value: contacts.phone,
-      onPress: () => void Linking.openURL(phoneHref(contacts.phone)),
-    });
-  }
+function buildSocials(contacts: SiteSettings["contacts"]): Social[] {
+  const socials: Social[] = [];
 
   if (hasText(contacts.whatsapp)) {
-    channels.push({
+    socials.push({
       key: "whatsapp",
       label: "WhatsApp",
-      value: contacts.whatsapp,
       onPress: () =>
         void Linking.openURL(
           whatsappURL(contacts.whatsapp, "Добрый день! Хочу связаться с вами."),
@@ -53,52 +42,28 @@ function buildChannels(contacts: SiteSettings["contacts"]): Channel[] {
   }
 
   if (hasText(contacts.telegram)) {
-    channels.push({
+    socials.push({
       key: "telegram",
       label: "Telegram",
-      value: contacts.telegram,
       onPress: () => void Linking.openURL(contacts.telegram),
     });
   }
 
-  if (hasText(contacts.email)) {
-    channels.push({
-      key: "email",
-      label: "Email",
-      value: contacts.email,
-      onPress: () => void Linking.openURL(`mailto:${contacts.email}`),
-    });
-  }
-
-  if (hasText(contacts.address)) {
-    channels.push({
-      key: "address",
-      label: "Адрес",
-      value: contacts.address,
-      onPress: () =>
-        void Linking.openURL(
-          `https://maps.google.com/?q=${encodeURIComponent(contacts.address)}`,
-        ),
-    });
-  }
-
   if (hasText(contacts.instagram)) {
-    channels.push({
+    socials.push({
       key: "instagram",
       label: "Instagram",
-      value: contacts.instagram,
       onPress: () => void Linking.openURL(contacts.instagram),
     });
   }
 
-  return channels;
+  return socials;
 }
 
 export default function ContactsScreen() {
   const { settings, loading, error, reload } = useSiteSettings();
-
-  const channels = useMemo(
-    () => (settings ? buildChannels(settings.contacts) : []),
+  const socials = useMemo(
+    () => (settings ? buildSocials(settings.contacts) : []),
     [settings],
   );
 
@@ -132,39 +97,73 @@ export default function ContactsScreen() {
     );
   }
 
+  const { contacts } = settings;
+
   return (
     <ScrollView
       contentContainerStyle={styles.content}
       style={styles.container}>
       <View style={styles.hero}>
-        <Text style={styles.kicker}>Как с нами связаться?</Text>
-        <Text style={styles.title}>Свяжитесь с нами</Text>
+        <View>
+          <Text style={styles.heroKicker}>Как с нами связаться?</Text>
+          <Text style={styles.heroTitle}>
+            Свяжитесь с нами{"\n"}без промедления
+          </Text>
+          {hasText(contacts.phone) ? (
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => void Linking.openURL(phoneHref(contacts.phone))}>
+              <Text style={styles.phone}>{contacts.phone}</Text>
+            </Pressable>
+          ) : null}
+          {hasText(contacts.email) ? (
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => void Linking.openURL(`mailto:${contacts.email}`)}>
+              <Text style={styles.email}>{contacts.email}</Text>
+            </Pressable>
+          ) : null}
+        </View>
+
+        <View style={styles.office}>
+          <Text style={styles.officeKicker}>
+            Будем рады видеть вас в офисе
+          </Text>
+          <Text style={styles.officeAddress}>
+            {hasText(contacts.address)
+              ? contacts.address
+              : "г. Махачкала\n5-я линия Акушинского 25"}
+          </Text>
+          {socials.length > 0 ? (
+            <View style={styles.socials}>
+              {socials.map((social) => (
+                <Pressable
+                  accessibilityRole="link"
+                  key={social.key}
+                  onPress={social.onPress}
+                  style={({ pressed }) => [
+                    styles.social,
+                    pressed && styles.pressed,
+                  ]}>
+                  <Text style={styles.socialText}>{social.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+        </View>
       </View>
 
-      {channels.length > 0 ? (
-        <View style={styles.card}>
-          {channels.map((channel, index) => (
-            <Pressable
-              accessibilityRole="button"
-              key={channel.key}
-              onPress={channel.onPress}
-              style={({ pressed }) => [
-                styles.channel,
-                index > 0 && styles.channelBorder,
-                pressed && styles.pressed,
-              ]}>
-              <Text style={styles.channelLabel}>{channel.label}</Text>
-              <Text style={styles.channelValue}>{channel.value}</Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
-
       {about.length > 0 ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>О компании</Text>
+        <View style={styles.about}>
+          <Text style={styles.kicker}>Центр недвижимости Дагестана</Text>
+          <Text style={styles.sectionTitle}>Кто мы?</Text>
           {about.map((paragraph, index) => (
-            <Text key={`about-${index}`} style={styles.paragraph}>
+            <Text
+              key={`about-${index}`}
+              style={[
+                styles.paragraph,
+                index === 0 && styles.aboutLead,
+              ]}>
               {paragraph}
             </Text>
           ))}
@@ -172,27 +171,24 @@ export default function ContactsScreen() {
       ) : null}
 
       {showFounder ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Основатель</Text>
-          <View style={styles.founderCard}>
-            {founder.imageUrl ? (
-              <Image
-                accessibilityLabel={founder.name || "Основатель"}
-                source={{ uri: founder.imageUrl }}
-                style={styles.founderImage}
-              />
+        <View style={styles.founder}>
+          {founder.imageUrl ? (
+            <Image
+              accessibilityLabel={founder.name || "Основатель"}
+              source={{ uri: founder.imageUrl }}
+              style={styles.founderImage}
+            />
+          ) : null}
+          <View style={styles.founderCopy}>
+            {hasText(founder.role) ? (
+              <Text style={styles.kicker}>{founder.role}</Text>
             ) : null}
-            <View style={styles.founderText}>
-              {hasText(founder.name) ? (
-                <Text style={styles.founderName}>{founder.name}</Text>
-              ) : null}
-              {hasText(founder.role) ? (
-                <Text style={styles.founderRole}>{founder.role}</Text>
-              ) : null}
-              {hasText(founder.bio) ? (
-                <Text style={styles.paragraph}>{founder.bio}</Text>
-              ) : null}
-            </View>
+            {hasText(founder.name) ? (
+              <Text style={styles.founderName}>{founder.name}</Text>
+            ) : null}
+            {hasText(founder.bio) ? (
+              <Text style={styles.founderBio}>{founder.bio}</Text>
+            ) : null}
           </View>
         </View>
       ) : null}
@@ -202,7 +198,7 @@ export default function ContactsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.pale,
+    backgroundColor: colors.surface,
     flex: 1,
   },
   fill: {
@@ -210,105 +206,151 @@ const styles = StyleSheet.create({
   },
   centered: {
     alignItems: "center",
-    backgroundColor: colors.pale,
+    backgroundColor: colors.surface,
     flex: 1,
     justifyContent: "center",
     padding: spacing.xl,
   },
   statusText: {
     color: colors.muted,
+    fontFamily,
     fontSize: 15,
     marginTop: spacing.md,
   },
   content: {
-    gap: spacing.lg,
+    gap: 32,
     padding: spacing.md,
-    paddingBottom: spacing.xl,
+    paddingBottom: 48,
   },
   hero: {
-    gap: spacing.xs,
-    paddingTop: spacing.sm,
-  },
-  kicker: {
-    color: colors.brass,
-    fontSize: 13,
-    fontWeight: "600",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
-  },
-  title: {
-    color: colors.ink,
-    fontSize: 26,
-    fontWeight: "700",
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
+    backgroundColor: colors.forest,
     borderRadius: 12,
-    borderWidth: 1,
-    overflow: "hidden",
+    gap: 30,
+    paddingHorizontal: 26,
+    paddingVertical: 36,
   },
-  channel: {
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+  heroKicker: {
+    color: "#c1d0c6",
+    fontFamily,
+    fontSize: 11,
+    marginBottom: 13,
   },
-  channelBorder: {
-    borderTopColor: colors.line,
+  heroTitle: {
+    color: colors.surface,
+    fontFamily,
+    fontSize: 31,
+    fontWeight: "500",
+    letterSpacing: -1,
+    lineHeight: 36,
+  },
+  phone: {
+    color: colors.surface,
+    fontFamily,
+    fontSize: 26,
+    letterSpacing: -0.8,
+    lineHeight: 34,
+    marginTop: 28,
+  },
+  email: {
+    color: "#d4dfd8",
+    fontFamily,
+    fontSize: 12,
+    marginTop: 9,
+  },
+  office: {
+    borderTopColor: "#577262",
     borderTopWidth: 1,
+    paddingTop: 24,
   },
-  channelLabel: {
-    color: colors.muted,
-    fontSize: 13,
-    fontWeight: "600",
+  officeKicker: {
+    color: "#c1d0c6",
+    fontFamily,
+    fontSize: 12,
+    marginBottom: 16,
   },
-  channelValue: {
-    color: colors.forest,
-    fontSize: 16,
-    fontWeight: "600",
+  officeAddress: {
+    color: colors.surface,
+    fontFamily,
+    fontSize: 21,
+    fontWeight: "500",
+    letterSpacing: -0.4,
+    lineHeight: 32,
+  },
+  socials: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 9,
+    marginTop: 22,
+  },
+  social: {
+    borderColor: "#708477",
+    borderRadius: 5,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  socialText: {
+    color: colors.surface,
+    fontFamily,
+    fontSize: 12,
   },
   pressed: {
-    opacity: 0.85,
+    opacity: 0.82,
   },
-  section: {
-    gap: spacing.sm,
+  about: {
+    gap: 12,
+    paddingTop: 8,
+  },
+  kicker: {
+    color: colors.muted,
+    fontFamily,
+    fontSize: 11,
   },
   sectionTitle: {
     color: colors.ink,
-    fontSize: 18,
-    fontWeight: "700",
+    fontFamily,
+    fontSize: 34,
+    fontWeight: "500",
+    letterSpacing: -1.2,
+    marginBottom: 8,
+  },
+  aboutLead: {
+    color: colors.ink,
+    fontSize: 22,
+    letterSpacing: -0.4,
+    lineHeight: 32,
   },
   paragraph: {
     color: colors.muted,
-    fontSize: 15,
-    lineHeight: 22,
+    fontFamily,
+    fontSize: 14,
+    lineHeight: 25,
   },
-  founderCard: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 12,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: spacing.md,
-    padding: spacing.md,
+  founder: {
+    backgroundColor: colors.founderBg,
+    borderRadius: 10,
+    overflow: "hidden",
   },
   founderImage: {
-    borderRadius: 8,
-    height: 88,
-    width: 88,
+    height: 300,
+    width: "100%",
   },
-  founderText: {
-    flex: 1,
-    gap: spacing.xs,
+  founderCopy: {
+    gap: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 28,
   },
   founderName: {
     color: colors.ink,
-    fontSize: 17,
-    fontWeight: "700",
+    fontFamily,
+    fontSize: 32,
+    fontWeight: "500",
+    letterSpacing: -1,
   },
-  founderRole: {
-    color: colors.brass,
+  founderBio: {
+    color: "#56665d",
+    fontFamily,
     fontSize: 14,
-    fontWeight: "600",
+    lineHeight: 25,
   },
 });

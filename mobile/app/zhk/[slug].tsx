@@ -23,7 +23,7 @@ import {
 } from "@/src/lib/map-content";
 import type { Product, SiteSettings } from "@/src/lib/types";
 import { whatsappURL } from "@/src/lib/whatsapp";
-import { colors, spacing } from "@/src/theme/tokens";
+import { colors, fontFamily, spacing } from "@/src/theme/tokens";
 
 export default function ProductScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -110,6 +110,18 @@ export default function ProductScreen() {
     <ScrollView
       contentContainerStyle={styles.content}
       style={styles.container}>
+      <View style={styles.crumbs}>
+        <Pressable accessibilityRole="link" onPress={() => router.push("/")}>
+          <Text style={styles.crumbLink}>Главная</Text>
+        </Pressable>
+        <Text style={styles.crumbSep}>/</Text>
+        <Pressable accessibilityRole="link" onPress={() => router.push("/")}>
+          <Text style={styles.crumbLink}>Наши дома</Text>
+        </Pressable>
+        <Text style={styles.crumbSep}>/</Text>
+        <Text style={styles.crumbCurrent}>{product.name}</Text>
+      </View>
+
       <View>
         <Image
           accessibilityLabel={product.name}
@@ -125,8 +137,8 @@ export default function ProductScreen() {
       </View>
 
       <View style={styles.summary}>
-        <Text style={styles.title}>{product.name}</Text>
         <Text style={styles.city}>{product.city}</Text>
+        <Text style={styles.title}>{product.name}</Text>
         <Text style={styles.price}>{money(product.price)}</Text>
         {details ? <Text style={styles.description}>{details}</Text> : null}
       </View>
@@ -139,7 +151,7 @@ export default function ProductScreen() {
           />
         ) : null}
         {contacts?.whatsapp ? (
-          <ActionButton label="WhatsApp" onPress={openWhatsApp} secondary />
+          <ActionButton label="WhatsApp ↗" onPress={openWhatsApp} secondary />
         ) : null}
         {product.projectPdf ? (
           <ActionButton
@@ -151,7 +163,7 @@ export default function ProductScreen() {
           />
         ) : null}
         <ActionButton
-          label="Подобрать квартиру"
+          label="Подобрать квартиру ↗"
           onPress={() =>
             router.push({
               pathname: "/quiz",
@@ -195,83 +207,122 @@ function ActionButton({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.pale,
+    backgroundColor: colors.surface,
   },
   content: {
-    paddingBottom: spacing.xl,
+    paddingBottom: 40,
+    paddingHorizontal: spacing.md,
   },
   centered: {
     alignItems: "center",
-    backgroundColor: colors.pale,
+    backgroundColor: colors.surface,
     flex: 1,
     justifyContent: "center",
     padding: spacing.xl,
   },
   statusText: {
     color: colors.muted,
+    fontFamily,
     fontSize: 15,
     marginTop: spacing.md,
   },
+  crumbs: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingBottom: 16,
+    paddingTop: 12,
+  },
+  crumbLink: {
+    color: colors.muted,
+    fontFamily,
+    fontSize: 11,
+  },
+  crumbSep: {
+    color: colors.muted,
+    fontSize: 11,
+  },
+  crumbCurrent: {
+    color: colors.ink,
+    flexShrink: 1,
+    fontFamily,
+    fontSize: 11,
+  },
   image: {
-    aspectRatio: 16 / 10,
-    backgroundColor: colors.line,
+    aspectRatio: 16 / 11,
+    backgroundColor: "#dce3db",
+    borderRadius: 12,
+    maxHeight: 280,
     width: "100%",
   },
   favorite: {
     position: "absolute",
-    right: spacing.md,
-    top: spacing.md,
+    right: spacing.sm,
+    top: spacing.sm,
   },
   summary: {
-    backgroundColor: colors.surface,
-    gap: spacing.sm,
-    padding: spacing.lg,
-  },
-  title: {
-    color: colors.ink,
-    fontSize: 26,
-    fontWeight: "700",
+    paddingTop: 20,
   },
   city: {
     color: colors.muted,
-    fontSize: 15,
+    fontFamily,
+    fontSize: 12,
+    marginBottom: 10,
+  },
+  title: {
+    color: colors.ink,
+    fontFamily,
+    fontSize: 32,
+    fontWeight: "500",
+    letterSpacing: -1.2,
+    marginBottom: 12,
   },
   price: {
-    color: colors.forest,
-    fontSize: 21,
-    fontWeight: "700",
+    color: colors.ink,
+    fontFamily,
+    fontSize: 26,
+    fontWeight: "500",
+    letterSpacing: -0.8,
+    marginBottom: 20,
   },
   description: {
-    color: colors.ink,
-    fontSize: 16,
+    color: "#4f5f57",
+    fontFamily,
+    fontSize: 14,
     lineHeight: 24,
-    marginTop: spacing.sm,
+    marginBottom: 16,
   },
   actions: {
-    gap: spacing.sm,
-    padding: spacing.md,
+    gap: 10,
+    marginBottom: 24,
   },
   action: {
     alignItems: "center",
     backgroundColor: colors.forest,
     borderColor: colors.forest,
-    borderRadius: 9,
+    borderRadius: 7,
     borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 54,
     paddingHorizontal: spacing.md,
     paddingVertical: 14,
+    width: "100%",
   },
   actionSecondary: {
     backgroundColor: colors.surface,
+    borderColor: "#bac8bd",
   },
   actionText: {
-    color: colors.brass,
-    fontSize: 16,
-    fontWeight: "700",
+    color: colors.surface,
+    fontFamily,
+    fontSize: 14,
+    fontWeight: "500",
   },
   actionTextSecondary: {
     color: colors.forest,
   },
   pressed: {
-    opacity: 0.78,
+    opacity: 0.86,
   },
 });

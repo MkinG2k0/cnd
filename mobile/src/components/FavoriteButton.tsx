@@ -44,8 +44,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.surface,
     borderRadius: 20,
+    elevation: 2,
     height: 40,
     justifyContent: "center",
+    shadowColor: "#153529",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
     width: 40,
   },
   pressed: {

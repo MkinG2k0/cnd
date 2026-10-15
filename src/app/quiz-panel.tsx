@@ -205,7 +205,7 @@ export function QuizPanel({
                         width={74}
                         height={58}
                         sizes="74px"
-                        quality={70}
+                        quality={75}
                       />
                     ) : null}
                   </label>

@@ -5,6 +5,7 @@ import {
   FlatList,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -13,11 +14,23 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { EmptyState } from "@/src/components/EmptyState";
 import { ErrorState } from "@/src/components/ErrorState";
 import { ProductCard } from "@/src/components/ProductCard";
+import {
+  catalogCellWidth,
+  catalogNumColumns,
+} from "@/src/lib/catalog-layout";
 import type { Product } from "@/src/lib/types";
-import { colors, spacing } from "@/src/theme/tokens";
+import { colors, fontFamily, spacing } from "@/src/theme/tokens";
+
+const GRID_GAP = 16;
 
 export default function FavoritesScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const numColumns = catalogNumColumns(width);
+  const cellWidth = catalogCellWidth(width, numColumns, {
+    gap: GRID_GAP,
+    horizontalPadding: spacing.md * 2,
+  });
   const { slugs, ready: favoritesReady } = useFavorites();
   const { products, loading, error, reload } = useCatalogData();
 
@@ -29,7 +42,7 @@ export default function FavoritesScreen() {
   }, [products, slugs]);
 
   const catalogButton = {
-    retryLabel: "В каталог",
+    retryLabel: "Наши дома",
     onRetry: () => router.push("/"),
   };
 
@@ -77,12 +90,15 @@ export default function FavoritesScreen() {
 
   return (
     <FlatList
+      columnWrapperStyle={numColumns > 1 ? styles.row : undefined}
       contentContainerStyle={[
         styles.list,
         favoriteProducts.length === 0 && styles.emptyList,
       ]}
       data={favoriteProducts}
+      key={numColumns}
       keyExtractor={(item) => item.sanityId}
+      numColumns={numColumns}
       ListEmptyComponent={
         <EmptyState
           title="Пока ничего нет"
@@ -90,12 +106,27 @@ export default function FavoritesScreen() {
           {...catalogButton}
         />
       }
-      renderItem={({ item }) => <ProductCard {...item} />}
+      ListHeaderComponent={
+        <View style={styles.heading}>
+          <Text style={styles.kicker}>Сохранённые объекты</Text>
+          <Text style={styles.title}>Избранное</Text>
+        </View>
+      }
+      renderItem={({ item }) => (
+        <View style={cellWidth != null ? { width: cellWidth } : undefined}>
+          <ProductCard {...item} />
+        </View>
+      )}
+      style={styles.container}
     />
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    backgroundColor: colors.pale,
+    flex: 1,
+  },
   fill: {
     flex: 1,
     backgroundColor: colors.pale,
@@ -109,16 +140,36 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: colors.muted,
+    fontFamily,
     fontSize: 15,
     marginTop: spacing.md,
   },
   list: {
     backgroundColor: colors.pale,
-    gap: spacing.md,
+    gap: 18,
     padding: spacing.md,
-    paddingBottom: spacing.xl,
+    paddingBottom: 48,
+  },
+  row: {
+    gap: GRID_GAP,
   },
   emptyList: {
     flexGrow: 1,
+  },
+  heading: {
+    gap: 8,
+    marginBottom: 8,
+  },
+  kicker: {
+    color: colors.muted,
+    fontFamily,
+    fontSize: 11,
+  },
+  title: {
+    color: colors.ink,
+    fontFamily,
+    fontSize: 34,
+    fontWeight: "500",
+    letterSpacing: -1.2,
   },
 });

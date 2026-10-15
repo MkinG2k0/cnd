@@ -37,6 +37,19 @@ npx eas build -p android --profile preview
 
 Скопируйте `.env.example` в `.env` и при необходимости обновите значения Sanity.
 
+## Sanity CORS (нужно для Expo Web)
+
+Каталог на `http://localhost:8081` ходит в Sanity прямо из браузера. Если origin не в allowlist, API отвечает `403 CORS Origin not allowed`, и экран показывает «Не удалось загрузить каталог».
+
+Добавить origin (из папки `studio-cnd`):
+
+```bash
+npx sanity cors add http://localhost:8081 --no-credentials
+npx sanity cors add http://127.0.0.1:8081 --no-credentials
+```
+
+Нативное Android-приложение CORS не использует: Origin-заголовок туда не уходит.
+
 ## Google Play и публикация
 
 - **Push-уведомления:** [Expo push tool](https://expo.dev/notifications) отправляет уведомление на конкретные Expo push token и сам по себе не выполняет массовую рассылку без списка токенов.

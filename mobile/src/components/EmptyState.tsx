@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { colors, spacing } from "../theme/tokens";
+import { colors, fontFamily, spacing } from "../theme/tokens";
 
 type EmptyStateProps = {
   title: string;
@@ -40,20 +40,23 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.ink,
+    fontFamily,
     fontSize: 20,
-    fontWeight: "700",
+    fontWeight: "500",
     textAlign: "center",
   },
   subtitle: {
     color: colors.muted,
+    fontFamily,
     fontSize: 15,
     lineHeight: 22,
     textAlign: "center",
   },
   button: {
     backgroundColor: colors.forest,
-    borderRadius: 8,
+    borderRadius: 7,
     marginTop: spacing.sm,
+    minHeight: 48,
     paddingHorizontal: spacing.lg,
     paddingVertical: 12,
   },
@@ -61,8 +64,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.forestHover,
   },
   buttonText: {
-    color: colors.brass,
-    fontSize: 15,
-    fontWeight: "700",
+    color: colors.surface,
+    fontFamily,
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

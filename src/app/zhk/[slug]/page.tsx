@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import {
   SITE_NAME,
   SITE_URL,
@@ -85,7 +86,25 @@ export async function generateMetadata({
   };
 }
 
-export default async function PropertyPage({ params }: PageProps) {
+function PropertyPageFallback() {
+  return (
+    <main id="property-main" className="property-page">
+      <div className="wrap property-top">
+        <p>Загрузка объекта…</p>
+      </div>
+    </main>
+  );
+}
+
+export default function PropertyPage({ params }: PageProps) {
+  return (
+    <Suspense fallback={<PropertyPageFallback />}>
+      <PropertyPageContent params={params} />
+    </Suspense>
+  );
+}
+
+async function PropertyPageContent({ params }: PageProps) {
   const { slug } = await params;
   const content = await getContent();
   const product = getProductBySlug(content.products, slug);

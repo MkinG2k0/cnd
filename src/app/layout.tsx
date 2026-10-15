@@ -109,7 +109,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   };
 
   return (
-    <html lang="ru" className={golos.variable}>
+    <html lang="ru" className={golos.variable} data-scroll-behavior="smooth">
       <body>
         <script
           type="application/ld+json"

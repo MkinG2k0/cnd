@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-12  
 **Status:** Approved for planning  
-**Stack:** Next.js (admin + API), Postgres, thin TypeScript SDK
+**Stack:** Next.js (admin + API), Postgres; consumer sites use plain `fetch`
 
 ## Problem
 
@@ -10,9 +10,9 @@ Sanity works for structured content, but clients must register in Sanity’s eco
 
 ## Goals
 
-- Embed easily into Next.js sites (REST + thin SDK)
+- Embed easily into Next.js sites via REST + plain `fetch`
 - Simple setup and integration per site (`projectId` + API key)
-- Separate Next.js CMS app (low traffic, multi-project)
+- Separate single Next.js CMS app (no monorepo; low traffic, multi-project)
 - One Postgres database for all projects; schemas stored in DB
 - Visual schema builder for the developer (superadmin only)
 - Clients edit content only (draft → publish)
@@ -27,21 +27,21 @@ Sanity works for structured content, but clients must register in Sanity’s eco
 - i18n
 - Page builder / portable-text parity with Sanity
 - Separate Nest/Hono (or other) API service — everything stays on Next.js
+- Monorepo / published SDK package — sites call the API with `fetch`
 
 ## Architecture
 
 ```
-[Site Next.js] --SDK/REST--> [CMS Next.js: /api/v1 + /admin] --Prisma--> [Postgres]
+[Site Next.js] --fetch/REST--> [CMS Next.js: /api/v1 + admin] --Prisma--> [Postgres]
                                          |
                                          +-- storage adapter (db | s3)
 ```
 
-Single deployable Next.js app:
+Single deployable Next.js app (one repo):
 
 1. **Admin UI** — authenticated app routes (`/login`, `/projects`, …)
 2. **Public REST API** (`/api/v1/...`) — published content only
 3. **Admin API** — session-authenticated mutations under `/api/admin/...`
-4. **SDK package** — thin `fetch` wrapper for consumer sites
 
 ## Data model (Postgres)
 
@@ -109,22 +109,22 @@ Returns published data only. No GROQ; filters limited to `type`, `limit`, `offse
 - Superadmin: projects, content types, API keys, members, storage settings
 - Superadmin + editor: entries CRUD, publish, media upload/list/delete
 
-## SDK
+## Site integration (fetch)
 
-Package consumed by site repos:
+No SDK. Consumer sites call the public API directly:
 
 ```ts
-const cms = createClient({
-  baseUrl: process.env.CMS_URL!,
-  projectId: 'cnd',
-  apiKey: process.env.CMS_API_KEY!,
-})
-
-const products = await cms.getEntries('product')
-const one = await cms.getEntryBySlug('product', 'slug')
+const res = await fetch(
+  `${process.env.CMS_URL}/api/v1/${process.env.CMS_PROJECT_ID}/entries?type=product`,
+  {
+    headers: { Authorization: `Bearer ${process.env.CMS_API_KEY}` },
+    next: { revalidate: 60 },
+  },
+)
+const products = await res.json()
 ```
 
-Implementation: thin typed `fetch` helper. Intended for Server Components / route handlers.
+Media URL: `${CMS_URL}/api/v1/${projectId}/media/${mediaId}`.
 
 ## Admin UI
 
@@ -172,18 +172,13 @@ Admin and public media APIs hide the driver difference from editors and sites.
 
 ## Project layout (CMS repo)
 
-Suggested new repository (not inside a marketing site):
+New standalone Next.js repository (not a monorepo, not inside a marketing site):
 
 ```
-apps/cms/          # Next.js admin + API
-packages/sdk/      # createClient SDK
-```
-
-Or flat:
-
-```
-/                  # Next.js app
-packages/sdk/      # published or path-linked to sites
+/                 # Next.js app (admin UI + API)
+prisma/           # schema + seed
+src/app/          # pages + route handlers
+src/lib/          # auth, schema, storage, tenancy
 ```
 
 First consumer can be the existing CND site after CMS MVP is ready; migration from Sanity is out of scope for this CMS MVP itself.
@@ -192,12 +187,11 @@ First consumer can be the existing CND site after CMS MVP is ready; migration fr
 
 1. Superadmin creates a project, defines types in UI, creates an editor user
 2. Editor logs in with URL + credentials, edits draft, publishes
-3. A Next.js site reads published entries via SDK with API key
+3. A Next.js site reads published entries via `fetch` + API key
 4. Two projects share one DB with isolated data
-5. One project can use `db` storage, another `s3`, without API/SDK changes
+5. One project can use `db` storage, another `s3`, without API changes for the site
 
 ## Open decisions for implementation plan (not blockers)
 
 - Exact ORM: Prisma preferred unless plan finds a better fit
-- Monorepo tool (pnpm workspaces vs simple folder)
 - Hosting target (VPS / Vercel + managed Postgres) — deploy detail, not product shape

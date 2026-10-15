@@ -1,4 +1,5 @@
-// mobile/src/theme/tokens.ts
+import { Platform } from "react-native";
+
 export const colors = {
   forest: "#193e35",
   forestDeep: "#123128",
@@ -10,6 +11,8 @@ export const colors = {
   line: "#dce2dc",
   surface: "#ffffff",
   error: "#a72e20",
+  cardBorder: "#e5e9e2",
+  founderBg: "#ecf0ea",
 } as const;
 
 export const spacing = {
@@ -19,3 +22,8 @@ export const spacing = {
   lg: 24,
   xl: 32,
 } as const;
+
+export const fontFamily = Platform.select({
+  web: "Golos Text, Arial, sans-serif",
+  default: undefined,
+});

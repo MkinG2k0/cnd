@@ -20,7 +20,7 @@ import {
   isCustomOption,
   whatsappURL,
 } from "@/src/lib/whatsapp";
-import { colors, spacing } from "@/src/theme/tokens";
+import { colors, fontFamily, spacing } from "@/src/theme/tokens";
 
 export default function QuizScreen() {
   const router = useRouter();
@@ -147,7 +147,7 @@ export default function QuizScreen() {
       keyboardShouldPersistTaps="handled"
       style={styles.container}>
       <View style={styles.top}>
-        <Text style={styles.kicker}>Подбор квартиры</Text>
+        <Text style={styles.kicker}>Индивидуальный подбор</Text>
         <Text style={styles.counter}>
           {step + 1} / {quiz.length + 1}
         </Text>
@@ -307,7 +307,7 @@ export default function QuizScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.pale,
+    backgroundColor: colors.founderBg,
     flex: 1,
   },
   centered: {
@@ -332,11 +332,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   kicker: {
-    color: colors.brass,
-    fontSize: 13,
-    fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
+    color: colors.muted,
+    fontFamily,
+    fontSize: 12,
   },
   counter: {
     color: colors.muted,
@@ -351,21 +349,24 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   progress: {
-    backgroundColor: colors.brass,
+    backgroundColor: colors.forest,
     height: "100%",
   },
   card: {
     backgroundColor: colors.surface,
-    borderColor: colors.line,
+    borderColor: colors.cardBorder,
     borderRadius: 12,
     borderWidth: 1,
     gap: spacing.md,
-    padding: spacing.md,
+    padding: 18,
   },
   title: {
     color: colors.ink,
-    fontSize: 24,
-    fontWeight: "700",
+    fontFamily,
+    fontSize: 22,
+    fontWeight: "500",
+    letterSpacing: -0.6,
+    lineHeight: 28,
   },
   help: {
     color: colors.muted,
@@ -377,16 +378,18 @@ const styles = StyleSheet.create({
   },
   option: {
     alignItems: "center",
+    backgroundColor: colors.pale,
     borderColor: colors.line,
-    borderRadius: 10,
+    borderRadius: 7,
     borderWidth: 1,
     flexDirection: "row",
     gap: spacing.sm,
     minHeight: 54,
-    padding: spacing.sm,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   optionSelected: {
-    backgroundColor: colors.pale,
+    backgroundColor: "#e1eadf",
     borderColor: colors.forest,
   },
   checkbox: {

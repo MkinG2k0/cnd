@@ -4,16 +4,17 @@ import {
   ActivityIndicator,
   FlatList,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 
 import { useCatalogData } from "@/hooks/useCatalogData";
 import { EmptyState } from "@/src/components/EmptyState";
 import { ErrorState } from "@/src/components/ErrorState";
+import { HeroSlider } from "@/src/components/HeroSlider";
 import { ProductCard } from "@/src/components/ProductCard";
 import {
   CITIES,
@@ -21,16 +22,33 @@ import {
   type CityFilter,
   type SortMode,
 } from "@/src/lib/catalog";
-import { colors, spacing } from "@/src/theme/tokens";
+import {
+  catalogCellWidth,
+  catalogNumColumns,
+} from "@/src/lib/catalog-layout";
+import { colors, fontFamily, spacing } from "@/src/theme/tokens";
+
+const GRID_GAP = 16;
+
+const CITY_TABS: { label: string; value: CityFilter }[] = [
+  { label: "Все города", value: "all" },
+  ...CITIES.map((city) => ({ label: city, value: city })),
+];
 
 const SORT_OPTIONS: { label: string; value: SortMode }[] = [
   { label: "По умолчанию", value: "default" },
-  { label: "Дешевле", value: "asc" },
-  { label: "Дороже", value: "desc" },
+  { label: "Сначала дешевле", value: "asc" },
+  { label: "Сначала дороже", value: "desc" },
 ];
 
 export default function CatalogScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const numColumns = catalogNumColumns(width);
+  const cellWidth = catalogCellWidth(width, numColumns, {
+    gap: GRID_GAP,
+    horizontalPadding: spacing.md * 2,
+  });
   const { products, loading, error, reload } = useCatalogData();
   const [city, setCity] = useState<CityFilter>("all");
   const [query, setQuery] = useState("");
@@ -64,226 +82,337 @@ export default function CatalogScreen() {
 
   return (
     <FlatList
+      columnWrapperStyle={numColumns > 1 ? styles.row : undefined}
       contentContainerStyle={[
         styles.list,
         filteredProducts.length === 0 && styles.emptyList,
       ]}
       data={filteredProducts}
+      key={numColumns}
       keyExtractor={(item) => item.sanityId}
       keyboardShouldPersistTaps="handled"
+      numColumns={numColumns}
       ListHeaderComponent={
-        <View style={styles.header}>
-          <View style={styles.headingRow}>
-            <View style={styles.headingCopy}>
-              <Text style={styles.title}>Жилые комплексы</Text>
-              <Text style={styles.subtitle}>
-                Найдите квартиру в Дагестане
+        <View>
+          <HeroSlider products={products} />
+
+          <View style={styles.hero}>
+            <View style={styles.location}>
+              <View style={styles.locationDot} />
+              <Text style={styles.locationText}>
+                Махачкала, Каспийск, Дербент
               </Text>
             </View>
+            <Text style={styles.heroTitle}>
+              Недвижимость{"\n"}Дагестана
+            </Text>
             <Pressable
               accessibilityRole="button"
               onPress={() => router.push("/quiz")}
               style={({ pressed }) => [
-                styles.quizButton,
+                styles.heroButton,
                 pressed && styles.pressed,
               ]}>
-              <Text style={styles.quizButtonText}>Подобрать</Text>
+              <Text style={styles.heroButtonText}>Ответить на вопросы</Text>
+              <Text style={styles.heroButtonArrow}>↗</Text>
             </Pressable>
           </View>
 
-          <TextInput
-            accessibilityLabel="Поиск по каталогу"
-            onChangeText={setQuery}
-            placeholder="Название или описание"
-            placeholderTextColor={colors.muted}
-            returnKeyType="search"
-            style={styles.search}
-            value={query}
-          />
+          <View style={styles.catalog}>
+            <Text style={styles.kicker}>Квартиры в новостройках</Text>
+            <View style={styles.headingRow}>
+              <Text style={styles.title}>Наши дома</Text>
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{products.length}</Text>
+              </View>
+            </View>
+            <Text style={styles.subtitle}>
+              Выберите город и познакомьтесь с жилыми комплексами поближе.
+            </Text>
 
-          <Text style={styles.controlLabel}>Город</Text>
-          <ScrollView
-            contentContainerStyle={styles.chips}
-            horizontal
-            showsHorizontalScrollIndicator={false}>
-            {(["all", ...CITIES] as CityFilter[]).map((value) => (
-              <Pressable
-                accessibilityRole="button"
-                key={value}
-                onPress={() => setCity(value)}
-                style={[
-                  styles.chip,
-                  city === value && styles.chipSelected,
-                ]}>
-                <Text
-                  style={[
-                    styles.chipText,
-                    city === value && styles.chipTextSelected,
-                  ]}>
-                  {value === "all" ? "Все" : value}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
+            <View style={styles.cityTabs}>
+              {CITY_TABS.map((tab) => {
+                const active = city === tab.value;
+                return (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    key={tab.value}
+                    onPress={() => setCity(tab.value)}
+                    style={[styles.cityTab, active && styles.cityTabActive]}>
+                    <Text
+                      style={[
+                        styles.cityTabText,
+                        active && styles.cityTabTextActive,
+                      ]}>
+                      {tab.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
 
-          <Text style={styles.controlLabel}>Сортировка</Text>
-          <View style={styles.sortRow}>
-            {SORT_OPTIONS.map((option) => (
-              <Pressable
-                accessibilityRole="button"
-                key={option.value}
-                onPress={() => setSort(option.value)}
-                style={[
-                  styles.sortButton,
-                  sort === option.value && styles.sortButtonSelected,
-                ]}>
-                <Text
-                  style={[
-                    styles.sortText,
-                    sort === option.value && styles.sortTextSelected,
-                  ]}>
-                  {option.label}
-                </Text>
-              </Pressable>
-            ))}
+            <View style={styles.search}>
+              <Text style={styles.searchIcon}>⌕</Text>
+              <TextInput
+                accessibilityLabel="Поиск по названию или району"
+                onChangeText={setQuery}
+                placeholder="Название или район"
+                placeholderTextColor={colors.muted}
+                returnKeyType="search"
+                style={styles.searchInput}
+                value={query}
+              />
+            </View>
+
+            <View style={styles.meta}>
+              <Text style={styles.metaText}>
+                Найдено комплексов: {filteredProducts.length}
+              </Text>
+              <View style={styles.sortRow}>
+                {SORT_OPTIONS.map((option) => (
+                  <Pressable
+                    accessibilityRole="button"
+                    key={option.value}
+                    onPress={() => setSort(option.value)}
+                    style={styles.sortOption}>
+                    <Text
+                      style={[
+                        styles.sortText,
+                        sort === option.value && styles.sortTextActive,
+                      ]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
           </View>
         </View>
       }
       ListEmptyComponent={
         <EmptyState
-          title="Ничего не найдено"
-          subtitle="Измените город или поисковый запрос."
+          title="По вашему запросу ничего не найдено."
+          subtitle="Попробуйте другой город или название."
         />
       }
-      renderItem={({ item }) => <ProductCard {...item} />}
+      renderItem={({ item }) => (
+        <View style={cellWidth != null ? { width: cellWidth } : undefined}>
+          <ProductCard {...item} />
+        </View>
+      )}
+      style={styles.container}
     />
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    backgroundColor: colors.pale,
+    flex: 1,
+  },
   centered: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: spacing.xl,
     backgroundColor: colors.pale,
   },
   statusText: {
     color: colors.muted,
+    fontFamily,
     fontSize: 15,
     marginTop: spacing.md,
   },
   list: {
     backgroundColor: colors.pale,
-    gap: spacing.md,
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
+    gap: 18,
+    paddingBottom: 48,
+    paddingHorizontal: spacing.md,
+  },
+  row: {
+    gap: GRID_GAP,
   },
   emptyList: {
     flexGrow: 1,
   },
-  header: {
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
+  hero: {
+    backgroundColor: colors.forest,
+    borderRadius: 12,
+    marginTop: spacing.md,
+    paddingHorizontal: 26,
+    paddingVertical: 30,
   },
-  headingRow: {
+  location: {
     alignItems: "center",
     flexDirection: "row",
-    gap: spacing.md,
-    justifyContent: "space-between",
-    marginBottom: spacing.sm,
+    gap: 9,
   },
-  headingCopy: {
-    flex: 1,
+  locationDot: {
+    backgroundColor: "#b5c7b0",
+    borderRadius: 3,
+    height: 6,
+    width: 6,
+  },
+  locationText: {
+    color: "#d0ded5",
+    fontFamily,
+    fontSize: 10,
+  },
+  heroTitle: {
+    color: colors.surface,
+    fontFamily,
+    fontSize: 38,
+    fontWeight: "500",
+    letterSpacing: -1.8,
+    lineHeight: 42,
+    marginBottom: 22,
+    marginTop: 28,
+  },
+  heroButton: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: colors.surface,
+    borderRadius: 7,
+    flexDirection: "row",
+    gap: 25,
+    minHeight: 54,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+  },
+  heroButtonText: {
+    color: colors.forest,
+    fontFamily,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  heroButtonArrow: {
+    color: colors.forest,
+    fontSize: 21,
+    lineHeight: 22,
+  },
+  pressed: {
+    opacity: 0.86,
+  },
+  catalog: {
+    paddingTop: 28,
+  },
+  kicker: {
+    color: colors.muted,
+    fontFamily,
+    fontSize: 11,
+    marginBottom: 13,
+  },
+  headingRow: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: 12,
   },
   title: {
     color: colors.ink,
-    fontSize: 24,
-    fontWeight: "700",
+    fontFamily,
+    fontSize: 34,
+    fontWeight: "500",
+    letterSpacing: -1.2,
+  },
+  countBadge: {
+    alignItems: "center",
+    borderColor: "#cbd4cb",
+    borderRadius: 40,
+    borderWidth: 1,
+    height: 28,
+    justifyContent: "center",
+    marginTop: 6,
+    minWidth: 40,
+    paddingHorizontal: 8,
+  },
+  countBadgeText: {
+    color: colors.forest,
+    fontFamily,
+    fontSize: 14,
   },
   subtitle: {
     color: colors.muted,
-    fontSize: 14,
-    marginTop: spacing.xs,
+    fontFamily,
+    fontSize: 13,
+    lineHeight: 22,
+    marginBottom: 22,
+    marginTop: 16,
   },
-  quizButton: {
+  cityTabs: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginBottom: 14,
+  },
+  cityTab: {
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+    borderRadius: 6,
+    borderWidth: 1,
+    minHeight: 40,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  cityTabActive: {
     backgroundColor: colors.forest,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
   },
-  quizButtonText: {
-    color: colors.brass,
-    fontSize: 15,
-    fontWeight: "700",
+  cityTabText: {
+    color: colors.ink,
+    fontFamily,
+    fontSize: 11,
   },
-  pressed: {
-    opacity: 0.82,
+  cityTabTextActive: {
+    color: colors.surface,
   },
   search: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 10,
-    borderWidth: 1,
-    color: colors.ink,
-    fontSize: 16,
-    marginBottom: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-  },
-  controlLabel: {
-    color: colors.ink,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  chips: {
-    gap: spacing.sm,
-    paddingBottom: spacing.sm,
-  },
-  chip: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  chipSelected: {
-    backgroundColor: colors.forest,
-    borderColor: colors.forest,
-  },
-  chipText: {
-    color: colors.ink,
-    fontSize: 14,
-  },
-  chipTextSelected: {
-    color: colors.surface,
-    fontWeight: "700",
-  },
-  sortRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  sortButton: {
     alignItems: "center",
     backgroundColor: colors.surface,
     borderColor: colors.line,
-    borderRadius: 8,
+    borderRadius: 6,
     borderWidth: 1,
-    flex: 1,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.sm,
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 18,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
   },
-  sortButtonSelected: {
-    borderColor: colors.forest,
+  searchIcon: {
+    color: colors.muted,
+    fontSize: 22,
+    lineHeight: 24,
+  },
+  searchInput: {
+    color: colors.ink,
+    flex: 1,
+    fontFamily,
+    fontSize: 12,
+    paddingVertical: 3,
+  },
+  meta: {
+    gap: 10,
+    marginBottom: 8,
+  },
+  metaText: {
+    color: colors.muted,
+    fontFamily,
+    fontSize: 10,
+  },
+  sortRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  sortOption: {
+    paddingVertical: 4,
   },
   sortText: {
     color: colors.muted,
-    fontSize: 12,
+    fontFamily,
+    fontSize: 10,
   },
-  sortTextSelected: {
-    color: colors.forest,
-    fontWeight: "700",
+  sortTextActive: {
+    color: colors.ink,
+    fontWeight: "600",
   },
 });

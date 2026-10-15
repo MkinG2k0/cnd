@@ -33,6 +33,7 @@ export default function ProductScreen() {
   const [contacts, setContacts] = useState<SiteSettings["contacts"] | null>(
     null,
   );
+  const [selectedUri, setSelectedUri] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -49,6 +50,9 @@ export default function ProductScreen() {
     try {
       const nextProduct = await fetchProductBySlug(slug);
       setProduct(nextProduct);
+      setSelectedUri(
+        nextProduct?.imageUrl || nextProduct?.galleryUrls[0] || "",
+      );
       try {
         const settings = await fetchSiteSettings();
         setContacts(settings.contacts);
@@ -96,6 +100,9 @@ export default function ProductScreen() {
   }
 
   const details = stripHtml(product.detailHtml) || product.description;
+  const galleryUris = [product.imageUrl, ...product.galleryUrls].filter(
+    Boolean,
+  );
   const openWhatsApp = () => {
     if (!contacts?.whatsapp) return;
     void Linking.openURL(
@@ -114,7 +121,7 @@ export default function ProductScreen() {
         <Image
           accessibilityLabel={product.name}
           resizeMode="cover"
-          source={{ uri: product.imageUrl }}
+          source={{ uri: selectedUri || product.imageUrl }}
           style={styles.image}
         />
         {favoritesReady ? (
@@ -123,6 +130,29 @@ export default function ProductScreen() {
           </View>
         ) : null}
       </View>
+      {product.galleryUrls.length ? (
+        <ScrollView
+          contentContainerStyle={styles.gallery}
+          horizontal
+          showsHorizontalScrollIndicator={false}>
+          {galleryUris.map((uri, index) => (
+            <Pressable
+              accessibilityLabel={`Показать фото ${index + 1}`}
+              accessibilityRole="button"
+              key={`${uri}-${index}`}
+              onPress={() => setSelectedUri(uri)}>
+              <Image
+                resizeMode="cover"
+                source={{ uri }}
+                style={[
+                  styles.thumbnail,
+                  uri === selectedUri && styles.thumbnailSelected,
+                ]}
+              />
+            </Pressable>
+          ))}
+        </ScrollView>
+      ) : null}
 
       <View style={styles.summary}>
         <Text style={styles.title}>{product.name}</Text>
@@ -221,6 +251,22 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: spacing.md,
     top: spacing.md,
+  },
+  gallery: {
+    backgroundColor: colors.surface,
+    gap: spacing.sm,
+    padding: spacing.md,
+  },
+  thumbnail: {
+    backgroundColor: colors.line,
+    borderColor: "transparent",
+    borderRadius: 8,
+    borderWidth: 2,
+    height: 72,
+    width: 96,
+  },
+  thumbnailSelected: {
+    borderColor: colors.brass,
   },
   summary: {
     backgroundColor: colors.surface,

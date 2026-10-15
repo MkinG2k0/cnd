@@ -8,6 +8,7 @@ export type Product = {
   price: number;
   city: string;
   imageUrl: string;
+  galleryUrls: string[];
   projectPdf?: string;
 };
 

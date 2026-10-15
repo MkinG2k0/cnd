@@ -12,6 +12,7 @@ test("mapProduct prefers slug.current and builds image URL string", () => {
     price: 1000000,
     city: "Махачкала",
     imageUrl: "https://cdn.sanity.io/images/example.jpg",
+    galleryUrls: [],
     projectPdf: "https://example.com/a.pdf",
   });
 
@@ -25,6 +26,7 @@ test("mapProduct prefers slug.current and builds image URL string", () => {
     price: 1000000,
     city: "Махачкала",
     imageUrl: "https://cdn.sanity.io/images/example.jpg",
+    galleryUrls: [],
     projectPdf: "https://example.com/a.pdf",
   });
 });
@@ -43,6 +45,24 @@ test("mapProduct falls back id to _id and empty optional fields", () => {
   expect(product.id).toBe("p2");
   expect(product.projectPdf).toBeUndefined();
   expect(product.detailHtml).toBe("");
+});
+
+test("mapProduct maps galleryUrls", () => {
+  const product = mapProduct({
+    _id: "p1",
+    name: "ЖК Тест",
+    slug: "zhk-test",
+    description: "",
+    price: 1,
+    city: "Махачкала",
+    imageUrl: "https://cdn/cover.jpg",
+    galleryUrls: ["https://cdn/a.jpg", "https://cdn/b.jpg"],
+  });
+
+  expect(product.galleryUrls).toEqual([
+    "https://cdn/a.jpg",
+    "https://cdn/b.jpg",
+  ]);
 });
 
 test("mapSiteSettings maps contacts and quiz", () => {

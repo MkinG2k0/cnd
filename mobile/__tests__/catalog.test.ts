@@ -13,6 +13,7 @@ const sample: Product[] = [
     price: 3000000,
     city: "Каспийск",
     imageUrl: "",
+    galleryUrls: [],
   },
   {
     id: "2",
@@ -24,6 +25,7 @@ const sample: Product[] = [
     price: 5000000,
     city: "Махачкала",
     imageUrl: "",
+    galleryUrls: [],
   },
 ];
 

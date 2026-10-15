@@ -8,6 +8,7 @@ export const PRODUCTS_QUERY = `*[_type == "product"] | order(sortOrder asc) {
   price,
   city,
   image,
+  "galleryUrls": gallery[].asset->url,
   projectPdf,
   sortOrder
 }`;
@@ -22,6 +23,7 @@ export const PRODUCT_BY_SLUG_QUERY = `*[_type == "product" && slug.current == $s
   price,
   city,
   image,
+  "galleryUrls": gallery[].asset->url,
   projectPdf,
   sortOrder
 }`;

@@ -15,3 +15,20 @@ Verification:
 - `cd mobile; npm test -- --runInBand` — PASS, 6 suites / 22 tests.
 - `cd mobile; npx tsc --noEmit` — PASS.
 - `git diff --check` — PASS (Git only reported expected LF-to-CRLF working-copy warnings).
+
+## Telegram enrichment final review
+
+Date: 2026-10-16
+
+- Commit: `26176fc fix: address final telegram enrichment review`
+- Root TypeScript excludes `scripts`, `mobile`, and `studio-cnd`, so Telegram scripts using explicit `.ts` imports do not enter the Next.js typecheck.
+- CLI argument validation rejects `--only` when its product name is missing or another flag follows it.
+- Telegram test coverage now includes the CLI validation regression cases.
+- Mobile product mapping filters null and empty gallery URLs.
+
+Verification:
+
+- `npm run test:telegram-enrich` — PASS, 8 suites / 18 tests.
+- `npx tsc --noEmit` — PASS.
+- `cd mobile; npm test -- --runInBand __tests__/map-content.test.ts` — PASS, 1 suite / 5 tests.
+- IDE diagnostics for changed TypeScript files — no errors.

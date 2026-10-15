@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:telegram-enrich": "npx --yes tsx --test scripts/telegram-enrich/topic-map.test.ts scripts/telegram-enrich/classify-media.test.ts scripts/telegram-enrich/text.test.ts scripts/telegram-enrich/build-manifest.test.ts scripts/telegram-enrich/apply-safety.test.ts",
+    "test:telegram-enrich": "npx --yes tsx --test scripts/telegram-enrich/topic-map.test.ts scripts/telegram-enrich/classify-media.test.ts scripts/telegram-enrich/text.test.ts scripts/telegram-enrich/build-manifest.test.ts scripts/telegram-enrich/apply-safety.test.ts scripts/telegram-enrich/cli.test.ts",
     "enrich:telegram": "npx --yes tsx scripts/enrich-from-telegram.ts",
     "enrich:telegram:apply": "npm --prefix studio-cnd run enrich:telegram -- --apply"
   },

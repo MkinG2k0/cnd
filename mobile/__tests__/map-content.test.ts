@@ -65,6 +65,20 @@ test("mapProduct maps galleryUrls", () => {
   ]);
 });
 
+test("mapProduct filters null galleryUrls", () => {
+  const product = mapProduct({
+    _id: "p1",
+    name: "ЖК Тест",
+    slug: "zhk-test",
+    description: "",
+    price: 1,
+    city: "Махачкала",
+    galleryUrls: ["https://cdn/a.jpg", null],
+  });
+
+  expect(product.galleryUrls).toEqual(["https://cdn/a.jpg"]);
+});
+
 test("mapSiteSettings maps contacts and quiz", () => {
   const settings = mapSiteSettings({
     quizIntro: "Intro",

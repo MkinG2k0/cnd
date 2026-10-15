@@ -67,4 +67,37 @@ describe("buildManifest", () => {
     assert.ok(product.pdfs.some((pdf) => pdf.action === "skip"));
     assert.equal(manifest.priceNote, "never modified");
   });
+
+  it("skips entire message when text looks like agent commission copy", () => {
+    const root = mkdtempSync(path.join(tmpdir(), "tg-enrich-"));
+    mkdirSync(path.join(root, "photos"), { recursive: true });
+    writeFileSync(
+      path.join(root, "result.json"),
+      JSON.stringify({
+        messages: [
+          {
+            id: 2,
+            type: "service",
+            action: "topic_created",
+            title: "СК ЖБИ",
+          },
+          {
+            id: 20,
+            type: "message",
+            reply_to_message_id: 2,
+            photo: "photos/commission.jpg",
+            text: "Комиссия агенту 3% при сделке",
+          },
+        ],
+      }),
+    );
+
+    const manifest = buildManifest(root);
+    const photos = manifest.products.flatMap((p) => p.photos);
+    assert.equal(photos.length, 0);
+    assert.equal(
+      photos.some((p) => p.relativePath.includes("commission")),
+      false,
+    );
+  });
 });

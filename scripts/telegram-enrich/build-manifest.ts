@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { classifyFile } from "./classify-media.ts";
 import { slugifyName } from "./slug.ts";
-import { getTextRule, messageText } from "./text.ts";
+import { getTextRule, isInternalOnlyMessage, messageText } from "./text.ts";
 import {
   resolveProductName,
   shouldSkipArcadaMessage,
@@ -98,6 +98,9 @@ export function buildManifest(
     }
 
     const text = messageText(message);
+    if (isInternalOnlyMessage(text)) {
+      continue;
+    }
     if (
       productName === "ЖК Золотые Пески" &&
       shouldSkipArcadaMessage(text)

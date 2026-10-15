@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:telegram-enrich": "npx --yes tsx --test scripts/telegram-enrich/*.test.ts"
   },
   "dependencies": {
     "@keystatic/core": "^0.6.9",

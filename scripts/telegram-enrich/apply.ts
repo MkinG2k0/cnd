@@ -36,6 +36,7 @@ const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../..",
 );
+const STUDIO_ROOT = path.join(PROJECT_ROOT, "studio-cnd");
 
 export function buildProductPatch(input: ProductPatchInput): ProductPatchInput {
   return {
@@ -65,6 +66,8 @@ export async function applyManifest(
   manifest: EnrichManifest,
   options: { replaceCover?: boolean } = {},
 ): Promise<void> {
+  const absoluteExportRoot = path.resolve(exportRoot);
+  process.chdir(STUDIO_ROOT);
   const client = getCliClient({ apiVersion: "2026-10-11" });
   let updatedProducts = 0;
   let uploadedImages = 0;
@@ -128,7 +131,7 @@ export async function applyManifest(
 
       const asset = await client.assets.upload(
         "image",
-        createReadStream(exportFile(exportRoot, photo.relativePath)),
+        createReadStream(exportFile(absoluteExportRoot, photo.relativePath)),
         { filename },
       );
       const image: ImageValue = {
@@ -160,7 +163,7 @@ export async function applyManifest(
         publicPath.replace(/^[/\\]+/, ""),
       );
       mkdirSync(path.dirname(destination), { recursive: true });
-      copyFileSync(exportFile(exportRoot, pdf.relativePath), destination);
+      copyFileSync(exportFile(absoluteExportRoot, pdf.relativePath), destination);
       projectPdf = publicPath;
       copiedPdfs += 1;
     }

@@ -12,6 +12,7 @@
     "start": "sanity start",
     "schema:deploy": "sanity schemas deploy",
     "migrate": "sanity exec ../scripts/migrate-to-sanity.ts --with-user-token",
+    "enrich:telegram": "sanity exec ../scripts/enrich-from-telegram.ts --with-user-token",
     "typegen": "sanity schema extract --force && sanity typegen generate"
   },
   "keywords": [

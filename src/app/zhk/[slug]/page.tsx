@@ -18,6 +18,7 @@ import {
 } from "../../../lib/content";
 import { BackHomeLink } from "../../back-home-link";
 import { ProjectPdfButton } from "../../project-pdf-button";
+import { PropertyGallery } from "../property-gallery";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -207,17 +208,11 @@ export default async function PropertyPage({ params }: PageProps) {
         </div>
 
         <article className="wrap property-layout">
-          <div className="property-media">
-            <Image
-              src={product.image}
-              alt={product.name}
-              width={960}
-              height={660}
-              sizes="(max-width: 900px) 100vw, 50vw"
-              quality={75}
-              preload
-            />
-          </div>
+          <PropertyGallery
+            cover={product.image}
+            images={product.gallery ?? []}
+            name={product.name}
+          />
 
           <div className="property-info">
             <p className="property-city">{product.city}</p>

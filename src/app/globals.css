@@ -154,7 +154,11 @@ dialog::backdrop{animation:backdrop-in .28s ease-out}
 .back-home:hover{color:#28594b}
 .property-layout{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:start}
 .property-media{border-radius:16px;overflow:hidden;background:#dce3db;position:sticky;top:24px}
-.property-media img{width:100%;aspect-ratio:4 / 3;object-fit:cover;display:block}
+.property-media>img{width:100%;aspect-ratio:4 / 3;object-fit:cover;display:block}
+.property-thumbs{display:flex;gap:8px;overflow-x:auto;padding:10px;background:#e8eee8}
+.property-thumbs button{border:0;padding:0;border-radius:8px;overflow:hidden;opacity:.7;cursor:pointer;flex:0 0 auto;background:transparent}
+.property-thumbs button.is-active{opacity:1;outline:2px solid var(--green);outline-offset:-2px}
+.property-thumbs img{display:block;width:72px;height:52px;object-fit:cover}
 .property-info .property-city{font-size:12px;color:var(--muted);margin-bottom:10px}
 .property-info h1{font-size:clamp(32px,4vw,48px);margin-bottom:16px}
 .property-lead{font-size:16px;line-height:1.7;color:var(--muted);margin-bottom:22px}
@@ -183,7 +187,7 @@ a.property-image{color:inherit}
 @media(max-width:900px){
   .property-layout{grid-template-columns:1fr;gap:28px}
   .property-media{position:static}
-  .property-media img{aspect-ratio:16 / 10;max-height:min(42vh,360px)}
+  .property-media>img{aspect-ratio:16 / 10;max-height:min(42vh,360px)}
   .related-grid{grid-template-columns:1fr 1fr}
 }
 @media(max-width:560px){
@@ -191,7 +195,7 @@ a.property-image{color:inherit}
   .property-top{padding:12px 0 16px;gap:10px;flex-direction:column;align-items:flex-start}
   .property-layout{gap:20px}
   .property-media{border-radius:12px;width:100%}
-  .property-media img{aspect-ratio:16 / 11;max-height:min(36vh,280px);width:100%;height:auto}
+  .property-media>img{aspect-ratio:16 / 11;max-height:min(36vh,280px);width:100%;height:auto}
   .property-info h1{font-size:clamp(28px,8vw,36px);margin-bottom:12px}
   .property-lead{font-size:14px;margin-bottom:16px}
   .property-price{font-size:26px;margin-bottom:20px}

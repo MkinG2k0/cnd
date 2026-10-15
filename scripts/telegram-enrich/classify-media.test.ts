@@ -23,4 +23,7 @@ describe("classifyFile", () => {
   it("treats jpg as photo", () => {
     assert.equal(classifyFile("photo_1.jpg"), "photo");
   });
+  it("default-denies unknown pdf names as legal_pdf", () => {
+    assert.equal(classifyFile("random.pdf", "application/pdf"), "legal_pdf");
+  });
 });

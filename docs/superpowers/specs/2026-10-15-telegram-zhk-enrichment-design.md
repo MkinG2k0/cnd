@@ -1,7 +1,7 @@
 # Telegram → ЖК enrichment (one-shot) — Design Spec
 
 **Date:** 2026-10-15  
-**Status:** Approved — plan in `docs/superpowers/plans/2026-10-15-telegram-zhk-enrichment.md`  
+**Status:** Implemented — code and automated checks complete; live Sanity `--apply` pending editor token (see Task 8 report). Plan: `docs/superpowers/plans/2026-10-15-telegram-zhk-enrichment.md`  
 **Goal:** One-time enrichment of existing product cards from the ЦНД Telegram group export — media + marketing texts. **Do not change prices.**
 
 ## Problem

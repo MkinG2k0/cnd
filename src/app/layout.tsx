@@ -73,9 +73,9 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
-  other: {
-    "theme-color": "#193e35",
-  },
+  // Белая шапка: светлая theme-color → тёмные иконки статус-бара на телефоне
+  themeColor: "#ffffff",
+  colorScheme: "light",
 };
 
 function absoluteUrl(url: string) {

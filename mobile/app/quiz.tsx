@@ -1,8 +1,8 @@
+import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
-  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -248,6 +248,8 @@ export default function QuizScreen() {
                     <Text style={styles.optionText}>{value}</Text>
                     {question.images[index] ? (
                       <Image
+                        cachePolicy="memory-disk"
+                        contentFit="cover"
                         source={{ uri: question.images[index] }}
                         style={styles.optionImage}
                       />

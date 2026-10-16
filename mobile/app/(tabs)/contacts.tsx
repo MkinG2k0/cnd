@@ -1,7 +1,7 @@
+import { Image } from "expo-image";
 import { useMemo } from "react";
 import {
   ActivityIndicator,
-  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -175,6 +175,8 @@ export default function ContactsScreen() {
           {founder.imageUrl ? (
             <Image
               accessibilityLabel={founder.name || "Основатель"}
+              cachePolicy="memory-disk"
+              contentFit="cover"
               source={{ uri: founder.imageUrl }}
               style={styles.founderImage}
             />

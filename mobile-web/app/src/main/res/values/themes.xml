@@ -4,8 +4,12 @@
         <item name="colorPrimary">@color/brand</item>
         <item name="android:statusBarColor">@color/white</item>
         <item name="android:navigationBarColor">@color/white</item>
+        <!-- Тёмные иконки статус-бара: шапка сайта белая, светлая тема телефона -->
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowBackground">@color/white</item>
         <item name="android:forceDarkAllowed">false</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
     </style>
 </resources>

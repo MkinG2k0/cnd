@@ -1,9 +1,9 @@
+import { useQuery } from "@tanstack/react-query";
+import { Image } from "expo-image";
 import * as WebBrowser from "expo-web-browser";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -21,50 +21,31 @@ import {
   fetchProductBySlug,
   fetchSiteSettings,
 } from "@/src/lib/map-content";
-import type { Product, SiteSettings } from "@/src/lib/types";
 import { whatsappURL } from "@/src/lib/whatsapp";
+import { queryKeys } from "@/src/query/keys";
 import { colors, fontFamily, spacing } from "@/src/theme/tokens";
 
 export default function ProductScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
   const { ready: favoritesReady } = useFavorites();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [contacts, setContacts] = useState<SiteSettings["contacts"] | null>(
-    null,
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
 
-  const load = useCallback(async () => {
-    if (!slug) {
-      setProduct(null);
-      setLoading(false);
-      return;
-    }
+  const productQuery = useQuery({
+    queryKey: queryKeys.product(slug ?? ""),
+    queryFn: () => fetchProductBySlug(slug!),
+    enabled: Boolean(slug),
+  });
 
-    setLoading(true);
-    setError(false);
-    setContacts(null);
-    try {
-      const nextProduct = await fetchProductBySlug(slug);
-      setProduct(nextProduct);
-      try {
-        const settings = await fetchSiteSettings();
-        setContacts(settings.contacts);
-      } catch {
-        setContacts(null);
-      }
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [slug]);
+  // Settings failure must not hide the product — separate query, contacts optional.
+  const settingsQuery = useQuery({
+    queryKey: queryKeys.siteSettings,
+    queryFn: fetchSiteSettings,
+  });
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const product = productQuery.data ?? null;
+  const contacts = settingsQuery.data?.contacts ?? null;
+  const loading = productQuery.isPending && !productQuery.data;
+  const error = Boolean(productQuery.isError && !productQuery.data);
 
   if (loading) {
     return (
@@ -81,7 +62,7 @@ export default function ProductScreen() {
         <ErrorState
           title="Не удалось загрузить объект"
           subtitle="Проверьте подключение к интернету и попробуйте снова."
-          onRetry={() => void load()}
+          onRetry={() => void productQuery.refetch()}
         />
       </View>
     );
@@ -125,7 +106,8 @@ export default function ProductScreen() {
       <View>
         <Image
           accessibilityLabel={product.name}
-          resizeMode="cover"
+          cachePolicy="memory-disk"
+          contentFit="cover"
           source={{ uri: product.imageUrl }}
           style={styles.image}
         />

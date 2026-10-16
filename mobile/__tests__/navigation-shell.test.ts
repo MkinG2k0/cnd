@@ -36,6 +36,7 @@ describe("navigation shell", () => {
   test("provides favorites and registers product and quiz screens", () => {
     const layout = read("app/_layout.tsx");
 
+    expect(layout).toContain("PersistQueryClientProvider");
     expect(layout).toContain("<FavoritesProvider>");
     expect(layout).toContain("<AppHeader />");
     expect(layout).toContain('name="zhk/[slug]"');
@@ -60,7 +61,8 @@ describe("navigation shell", () => {
     const detail = read("app/zhk/[slug].tsx");
 
     expect(detail).not.toContain("Promise.all([");
-    expect(detail).toContain("setContacts(null)");
+    expect(detail).toContain("contacts optional");
+    expect(detail).toContain("settingsQuery");
   });
 
   test("quiz consent has only one toggle handler", () => {

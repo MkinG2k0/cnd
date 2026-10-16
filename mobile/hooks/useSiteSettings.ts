@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { fetchSiteSettings } from "../src/lib/map-content";
 import type { SiteSettings } from "../src/lib/types";
+import { queryKeys } from "../src/query/keys";
+import { prefetchSiteSettingsImages } from "../src/query/prefetch-images";
 
 type SiteSettingsData = {
   settings: SiteSettings | null;
@@ -11,43 +14,22 @@ type SiteSettingsData = {
 };
 
 export function useSiteSettings(): SiteSettingsData {
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const mounted = useRef(true);
-
-  const reload = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const nextSettings = await fetchSiteSettings();
-      if (mounted.current) {
-        setSettings(nextSettings);
-      }
-    } catch (reason) {
-      if (mounted.current) {
-        setError(
-          reason instanceof Error
-            ? reason
-            : new Error("Не удалось загрузить настройки"),
-        );
-      }
-    } finally {
-      if (mounted.current) {
-        setLoading(false);
-      }
-    }
-  }, []);
+  const query = useQuery({
+    queryKey: queryKeys.siteSettings,
+    queryFn: fetchSiteSettings,
+  });
 
   useEffect(() => {
-    mounted.current = true;
-    void reload();
+    if (!query.data) return;
+    prefetchSiteSettingsImages(query.data);
+  }, [query.data]);
 
-    return () => {
-      mounted.current = false;
-    };
-  }, [reload]);
-
-  return { settings, loading, error, reload };
+  return {
+    settings: query.data ?? null,
+    loading: query.isPending && !query.data,
+    error: query.error,
+    reload: async () => {
+      await query.refetch();
+    },
+  };
 }

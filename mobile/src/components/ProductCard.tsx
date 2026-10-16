@@ -1,5 +1,6 @@
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { money } from "../lib/format";
 import type { Product } from "../lib/types";
@@ -36,7 +37,8 @@ export function ProductCard({
           style={styles.mediaPressable}>
           <Image
             accessibilityLabel={name}
-            resizeMode="cover"
+            cachePolicy="memory-disk"
+            contentFit="cover"
             source={{ uri: imageUrl }}
             style={styles.image}
           />

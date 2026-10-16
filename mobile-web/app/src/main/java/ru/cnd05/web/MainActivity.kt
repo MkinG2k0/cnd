@@ -19,6 +19,9 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import ru.cnd05.web.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -37,6 +40,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setupSystemBars()
 
         CookieManager.getInstance().setAcceptCookie(true)
 
@@ -145,6 +149,25 @@ class MainActivity : AppCompatActivity() {
         } else {
             binding.webView.restoreState(savedInstanceState)
         }
+    }
+
+    private fun setupSystemBars() {
+        // Android 15+ рисует контент под статус-баром (edge-to-edge).
+        // Отступаем WebView на system bars, фон остаётся белым — иконки тёмные.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color.WHITE
+        window.navigationBarColor = Color.WHITE
+
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.isAppearanceLightStatusBars = true
+        controller.isAppearanceLightNavigationBars = true
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        ViewCompat.requestApplyInsets(binding.root)
     }
 
     private fun reloadSite() {

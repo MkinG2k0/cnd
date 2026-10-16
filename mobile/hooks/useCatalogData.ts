@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { fetchProducts } from "../src/lib/map-content";
 import type { Product } from "../src/lib/types";
+import { queryKeys } from "../src/query/keys";
+import { prefetchProductImages } from "../src/query/prefetch-images";
+import { seedProductQueries } from "../src/query/seed-products";
 
 type CatalogData = {
   products: Product[];
@@ -11,43 +15,24 @@ type CatalogData = {
 };
 
 export function useCatalogData(): CatalogData {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const mounted = useRef(true);
-
-  const reload = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const nextProducts = await fetchProducts();
-      if (mounted.current) {
-        setProducts(nextProducts);
-      }
-    } catch (reason) {
-      if (mounted.current) {
-        setError(
-          reason instanceof Error
-            ? reason
-            : new Error("Не удалось загрузить каталог"),
-        );
-      }
-    } finally {
-      if (mounted.current) {
-        setLoading(false);
-      }
-    }
-  }, []);
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: queryKeys.products,
+    queryFn: fetchProducts,
+  });
 
   useEffect(() => {
-    mounted.current = true;
-    void reload();
+    if (!query.data) return;
+    seedProductQueries(queryClient, query.data);
+    prefetchProductImages(query.data);
+  }, [query.data, queryClient]);
 
-    return () => {
-      mounted.current = false;
-    };
-  }, [reload]);
-
-  return { products, loading, error, reload };
+  return {
+    products: query.data ?? [],
+    loading: query.isPending && !query.data,
+    error: query.error,
+    reload: async () => {
+      await query.refetch();
+    },
+  };
 }

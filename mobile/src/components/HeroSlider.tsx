@@ -1,9 +1,9 @@
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Dimensions,
-  Image,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
@@ -107,7 +107,8 @@ export function HeroSlider({ products }: HeroSliderProps) {
             style={[styles.slide, { width }]}>
             <Image
               accessibilityLabel={product.name}
-              resizeMode="cover"
+              cachePolicy="memory-disk"
+              contentFit="cover"
               source={{ uri: product.imageUrl }}
               style={styles.image}
             />

@@ -16,6 +16,7 @@ type ProductDto = {
   city: string;
   imageUrl?: string;
   image?: unknown;
+  galleryUrls?: (string | null)[] | null;
   projectPdf?: string | null;
 };
 
@@ -55,6 +56,9 @@ export function mapProduct(raw: ProductDto): Product {
     price: raw.price,
     city: raw.city,
     imageUrl: raw.imageUrl || "",
+    galleryUrls: (raw.galleryUrls ?? []).filter(
+      (url): url is string => typeof url === "string" && Boolean(url),
+    ),
     projectPdf: raw.projectPdf || undefined,
   };
 }

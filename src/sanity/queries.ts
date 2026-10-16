@@ -46,6 +46,7 @@ export const PRODUCTS_QUERY = defineQuery(`
     price,
     city,
     image,
+    gallery,
     projectPdf,
     sortOrder
   }

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import * as WebBrowser from "expo-web-browser";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
@@ -29,6 +30,7 @@ export default function ProductScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
   const { ready: favoritesReady } = useFavorites();
+  const [selectedUri, setSelectedUri] = useState("");
 
   const productQuery = useQuery({
     queryKey: queryKeys.product(slug ?? ""),
@@ -46,6 +48,10 @@ export default function ProductScreen() {
   const contacts = settingsQuery.data?.contacts ?? null;
   const loading = productQuery.isPending && !productQuery.data;
   const error = Boolean(productQuery.isError && !productQuery.data);
+
+  useEffect(() => {
+    setSelectedUri(product?.imageUrl || product?.galleryUrls?.[0] || "");
+  }, [product?.slug, product?.imageUrl]);
 
   if (loading) {
     return (
@@ -77,6 +83,9 @@ export default function ProductScreen() {
   }
 
   const details = stripHtml(product.detailHtml) || product.description;
+  const galleryUris = [product.imageUrl, ...product.galleryUrls].filter(
+    Boolean,
+  );
   const openWhatsApp = () => {
     if (!contacts?.whatsapp) return;
     void Linking.openURL(
@@ -108,7 +117,7 @@ export default function ProductScreen() {
           accessibilityLabel={product.name}
           cachePolicy="memory-disk"
           contentFit="cover"
-          source={{ uri: product.imageUrl }}
+          source={{ uri: selectedUri || product.imageUrl }}
           style={styles.image}
         />
         {favoritesReady ? (
@@ -117,6 +126,31 @@ export default function ProductScreen() {
           </View>
         ) : null}
       </View>
+      {product.galleryUrls.length ? (
+        <ScrollView
+          contentContainerStyle={styles.gallery}
+          horizontal
+          showsHorizontalScrollIndicator={false}>
+          {galleryUris.map((uri, index) => (
+            <Pressable
+              accessibilityLabel={`Показать фото ${index + 1}`}
+              accessibilityRole="button"
+              key={`${uri}-${index}`}
+              onPress={() => setSelectedUri(uri)}>
+              <Image
+                cachePolicy="memory-disk"
+                contentFit="cover"
+                source={{ uri }}
+                style={[
+                  styles.thumbnail,
+                  uri === (selectedUri || product.imageUrl) &&
+                    styles.thumbnailSelected,
+                ]}
+              />
+            </Pressable>
+          ))}
+        </ScrollView>
+      ) : null}
 
       <View style={styles.summary}>
         <Text style={styles.city}>{product.city}</Text>
@@ -242,6 +276,22 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: spacing.sm,
     top: spacing.sm,
+  },
+  gallery: {
+    backgroundColor: colors.surface,
+    gap: spacing.sm,
+    padding: spacing.md,
+  },
+  thumbnail: {
+    backgroundColor: colors.line,
+    borderColor: "transparent",
+    borderRadius: 8,
+    borderWidth: 2,
+    height: 72,
+    width: 96,
+  },
+  thumbnailSelected: {
+    borderColor: colors.brass,
   },
   summary: {
     paddingTop: 20,

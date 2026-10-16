@@ -70,6 +70,12 @@ export const product = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: 'gallery',
+      title: 'Галерея',
+      type: 'array',
+      of: [{type: 'image', options: {hotspot: true}}],
+    }),
+    defineField({
       name: 'projectPdf',
       title: 'Проектная документация (URL)',
       type: 'string',

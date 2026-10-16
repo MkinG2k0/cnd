@@ -12,6 +12,7 @@ export type Product = {
   detailHtml: string;
   price: number;
   image: string;
+  gallery?: string[];
   city: string;
   projectPdf?: string;
   slug?: string;
@@ -109,6 +110,7 @@ type SanityProduct = {
   price: number;
   city: string;
   image?: unknown;
+  gallery?: unknown[] | null;
   projectPdf?: string | null;
 };
 
@@ -166,6 +168,9 @@ export async function getContent(): Promise<SiteContent> {
     detailHtml: product.detailHtml || "",
     price: product.price,
     image: imageUrl(product.image as never, 1200),
+    gallery: (product.gallery ?? [])
+      .map((img) => imageUrl(img as never, 1200))
+      .filter(Boolean),
     city: product.city,
     projectPdf: product.projectPdf || undefined,
     slug: product.slug || slugifyName(product.name),

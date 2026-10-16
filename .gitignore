@@ -49,3 +49,5 @@ next-env.d.ts
 .worktrees/
 .superpowers/
 
+scripts/telegram-enrich/last-manifest.json
+

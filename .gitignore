@@ -17,6 +17,17 @@
 /.next/
 /out/
 
+# Capacitor local tooling
+/.capacitor/
+/.capacitor-tmp/
+/android/local.properties
+/android/.gradle/
+/android/app/build/
+/android/build/
+/android/captures/
+*.apk
+*.aab
+
 # production
 /build
 

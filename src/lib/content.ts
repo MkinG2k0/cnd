@@ -99,7 +99,7 @@ export function slugifyName(name: string) {
     .replace(/-{2,}/g, "-");
 }
 
-type SanityProduct = {
+export type SanityProduct = {
   _id: string;
   legacyId?: string | null;
   name: string;
@@ -112,7 +112,7 @@ type SanityProduct = {
   projectPdf?: string | null;
 };
 
-type SanitySettings = {
+export type SanitySettings = {
   logo?: unknown;
   quizIntro?: string | null;
   teamDescription?: string | null;
@@ -149,17 +149,11 @@ type SanitySettings = {
 
 const fetchOptions = { next: { revalidate: 60 } };
 
-export async function getContent(): Promise<SiteContent> {
-  const [settings, products] = await Promise.all([
-    client.fetch<SanitySettings | null>(SITE_SETTINGS_QUERY, {}, fetchOptions),
-    client.fetch<SanityProduct[]>(PRODUCTS_QUERY, {}, fetchOptions),
-  ]);
-
-  if (!settings) {
-    throw new Error("Sanity siteSettings not found. Run migration first.");
-  }
-
-  const mappedProducts: Product[] = (products ?? []).map((product) => ({
+export function mapSiteContent(
+  settings: SanitySettings,
+  products: SanityProduct[],
+): SiteContent {
+  const mappedProducts: Product[] = products.map((product) => ({
     id: product.legacyId || product._id,
     name: product.name,
     description: product.description,
@@ -213,6 +207,19 @@ export async function getContent(): Promise<SiteContent> {
     quizIntro: settings.quizIntro || "",
     teamDescription: settings.teamDescription || "",
   };
+}
+
+export async function getContent(): Promise<SiteContent> {
+  const [settings, products] = await Promise.all([
+    client.fetch<SanitySettings | null>(SITE_SETTINGS_QUERY, {}, fetchOptions),
+    client.fetch<SanityProduct[]>(PRODUCTS_QUERY, {}, fetchOptions),
+  ]);
+
+  if (!settings) {
+    throw new Error("Sanity siteSettings not found. Run migration first.");
+  }
+
+  return mapSiteContent(settings, products ?? []);
 }
 
 export function productSlug(product: Product) {

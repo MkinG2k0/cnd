@@ -30,5 +30,12 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "studio-cnd"]
+  "exclude": [
+    "node_modules",
+    "studio-cnd",
+    "mobile",
+    "mobile-web",
+    "android",
+    "ios"
+  ]
 }

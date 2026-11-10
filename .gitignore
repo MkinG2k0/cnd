@@ -27,6 +27,9 @@
 /android/captures/
 *.apk
 *.aab
+*.keystore
+/android/keystore.properties
+/android/cnd-upload.keystore
 
 # production
 /build

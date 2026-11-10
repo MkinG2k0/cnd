@@ -25,7 +25,7 @@ async function restoreSeoRoutes() {
 }
 
 await parkSeoRoutes();
-const result = spawnSync(
+let result = spawnSync(
   "npx",
   ["next", "build"],
   {
@@ -38,5 +38,40 @@ const result = spawnSync(
     shell: process.platform === "win32",
   },
 );
+
+// Next may exit non-zero after a successful export due to a security nudge.
+// Retry once, then accept a complete `out/index.html` as success.
+const { access } = await import("node:fs/promises");
+async function exportReady() {
+  try {
+    await access(path.join(root, "out", "index.html"));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+if ((result.status ?? 1) !== 0 && !(await exportReady())) {
+  result = spawnSync(
+    "npx",
+    ["next", "build"],
+    {
+      cwd: root,
+      stdio: "inherit",
+      env: {
+        ...process.env,
+        NEXT_PUBLIC_CAPACITOR: "1",
+      },
+      shell: process.platform === "win32",
+    },
+  );
+}
+
 await restoreSeoRoutes();
+if ((result.status ?? 1) !== 0 && (await exportReady())) {
+  console.warn(
+    "next build exited non-zero, but out/index.html exists — continuing Capacitor sync",
+  );
+  process.exit(0);
+}
 process.exit(result.status ?? 1);

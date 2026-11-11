@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { isCapacitorShell } from "../lib/capacitor";
 import { SITE_NAME, SITE_URL, getContent } from "../lib/content";
+import { CapacitorShell } from "./capacitor-shell";
 import { Home } from "./home";
 
 export const metadata: Metadata = {
@@ -20,6 +22,10 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
+  if (isCapacitorShell()) {
+    return <CapacitorShell />;
+  }
+
   const content = await getContent();
   return <Home content={content} />;
 }

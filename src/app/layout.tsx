@@ -85,6 +85,16 @@ function absoluteUrl(url: string) {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { isCapacitorShell } = await import("../lib/capacitor");
+
+  if (isCapacitorShell()) {
+    return (
+      <html lang="ru" className={golos.variable} data-scroll-behavior="smooth">
+        <body>{children}</body>
+      </html>
+    );
+  }
+
   const content = await getContent();
 
   const orgJsonLd = {

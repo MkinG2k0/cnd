@@ -23,11 +23,25 @@ npm start
 - `src/app/` — UI: главная, `/zhk/[slug]`, квиз, SEO (`robots`, `sitemap`)
 - `src/sanity/` — клиент и GROQ-запросы к Sanity
 - `studio-cnd/` — Sanity Studio (standalone, порт 3333)
+- `android/` — Capacitor Android (appId `ru.cnd05.app`)
+- `mobile/` — Expo-приложение (отдельный стек)
+- `mobile-web/` — старая WebView-обёртка remote URL
 - `content/site.json` — исходный снимок контента (для миграции)
 - `content/project-pdfs.json` — привязка PDF к ЖК
 - `public/assets/` — исходные фото (загружены в Sanity)
 - `public/projects/` — проектная документация (Git LFS)
 - `DESIGN.md` / `PRODUCT.md` — дизайн-система и продуктовый контекст
+
+## Android (Capacitor)
+
+Статический export UI + живой каталог из Sanity (без новой сборки APK при правках ЖК). Push в MVP нет.
+
+```bash
+npm run cap:sync
+npm run cap:open
+```
+
+Подробнее: `mobile-capacitor/README.md`.
 
 ## Sanity
 

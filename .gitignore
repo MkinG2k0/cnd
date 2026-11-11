@@ -17,6 +17,20 @@
 /.next/
 /out/
 
+# Capacitor local tooling
+/.capacitor/
+/.capacitor-tmp/
+/android/local.properties
+/android/.gradle/
+/android/app/build/
+/android/build/
+/android/captures/
+*.apk
+*.aab
+*.keystore
+/android/keystore.properties
+/android/cnd-upload.keystore
+
 # production
 /build
 

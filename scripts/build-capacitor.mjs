@@ -7,24 +7,42 @@ const tmp = path.join(root, ".capacitor-tmp");
 const parked = [
   ["src/app/sitemap.ts", "sitemap.ts"],
   ["src/app/robots.ts", "robots.ts"],
+  // Large local PDFs — open from CDN/Sanity URLs, do not ship inside the APK.
+  ["public/projects", "projects"],
 ];
 
-async function parkSeoRoutes() {
+async function parkBuildExtras() {
   await rm(tmp, { recursive: true, force: true });
   await mkdir(tmp, { recursive: true });
   for (const [from, name] of parked) {
-    await rename(path.join(root, from), path.join(tmp, name));
+    const abs = path.join(root, from);
+    try {
+      await rename(abs, path.join(tmp, name));
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+        continue;
+      }
+      throw error;
+    }
   }
 }
 
-async function restoreSeoRoutes() {
+async function restoreBuildExtras() {
   for (const [from, name] of parked) {
-    await rename(path.join(tmp, name), path.join(root, from));
+    const parkedPath = path.join(tmp, name);
+    try {
+      await rename(parkedPath, path.join(root, from));
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+        continue;
+      }
+      throw error;
+    }
   }
   await rm(tmp, { recursive: true, force: true });
 }
 
-await parkSeoRoutes();
+await parkBuildExtras();
 let result = spawnSync(
   "npx",
   ["next", "build"],
@@ -67,7 +85,7 @@ if ((result.status ?? 1) !== 0 && !(await exportReady())) {
   );
 }
 
-await restoreSeoRoutes();
+await restoreBuildExtras();
 if ((result.status ?? 1) !== 0 && (await exportReady())) {
   console.warn(
     "next build exited non-zero, but out/index.html exists — continuing Capacitor sync",

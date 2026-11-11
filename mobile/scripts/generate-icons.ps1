@@ -1,6 +1,6 @@
 Add-Type -AssemblyName System.Drawing
 
-$srcPath = Join-Path $PSScriptRoot "..\assets\images\logo.jpg"
+$srcPath = Join-Path $PSScriptRoot "..\assets\images\logo.png"
 $img = [System.Drawing.Image]::FromFile((Resolve-Path $srcPath))
 $white = [System.Drawing.Color]::White
 $outDir = Resolve-Path (Join-Path $PSScriptRoot "..\assets\images")

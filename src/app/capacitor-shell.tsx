@@ -52,6 +52,10 @@ export function CapacitorShell() {
   }, []);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [slug]);
+
+  useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
     let handle: { remove: () => Promise<void> } | undefined;

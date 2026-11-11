@@ -32,8 +32,8 @@ export const metadata: Metadata = {
     "агентство недвижимости",
   ],
   icons: {
-    icon: "/assets/logo.jpg",
-    apple: "/assets/logo.jpg",
+    icon: [{ url: "/assets/logo.png", type: "image/png" }],
+    apple: "/assets/logo.png",
   },
   alternates: {
     canonical: SITE_URL,

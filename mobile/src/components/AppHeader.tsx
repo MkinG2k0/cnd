@@ -106,7 +106,7 @@ export function AppHeader() {
           style={styles.brand}>
           <Image
             accessibilityIgnoresInvertColors
-            source={require("../../assets/images/logo.jpg")}
+            source={require("../../assets/images/logo.png")}
             style={styles.logo}
           />
           <View style={styles.brandCopy}>

@@ -6,8 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "build:capacitor": "node scripts/build-capacitor.mjs",
+    "cap:icons": "node scripts/generate-capacitor-icons.mjs",
+    "cap:keystore": "node scripts/create-capacitor-keystore.mjs",
     "cap:sync": "npm run build:capacitor && npx cap sync android",
     "cap:open": "npx cap open android",
+    "cap:release": "npm run cap:icons && npm run cap:sync && npm run cap:keystore && cd android && .\\gradlew.bat assembleRelease bundleRelease",
     "start": "next start",
     "lint": "eslint",
     "test:telegram-enrich": "npx --yes tsx --test scripts/telegram-enrich/topic-map.test.ts scripts/telegram-enrich/classify-media.test.ts scripts/telegram-enrich/text.test.ts scripts/telegram-enrich/build-manifest.test.ts scripts/telegram-enrich/apply-safety.test.ts scripts/telegram-enrich/cli.test.ts",
@@ -36,6 +39,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

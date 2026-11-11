@@ -30,6 +30,7 @@
 *.keystore
 /android/keystore.properties
 /android/cnd-upload.keystore
+!/android/keystore.properties.example
 
 # production
 /build
@@ -62,6 +63,11 @@ next-env.d.ts
 # Local agent worktrees / SDD scratch
 .worktrees/
 .superpowers/
+tmp-logo/
 
 scripts/telegram-enrich/last-manifest.json
+
+
+# Android Studio
+/android/.idea/
 

@@ -6,9 +6,11 @@ const config: CapacitorConfig = {
   webDir: "out",
   server: {
     androidScheme: "https",
+    hostname: "localhost",
   },
   android: {
     allowMixedContent: false,
+    backgroundColor: "#ffffff",
   },
   plugins: {
     StatusBar: {

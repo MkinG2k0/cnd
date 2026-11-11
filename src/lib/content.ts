@@ -208,7 +208,8 @@ export function mapSiteContent(
         .map((img) => imageUrl(img as never, 800))
         .filter(Boolean),
     })),
-    logo: imageUrl(settings.logo as never, 200),
+    // Brand mark shipped in /public/assets — keep Sanity field as optional future source.
+    logo: "/assets/logo.png",
     quizIntro: settings.quizIntro || "",
     teamDescription: settings.teamDescription || "",
   };

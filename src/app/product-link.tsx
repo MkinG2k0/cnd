@@ -5,6 +5,7 @@ import type { ComponentProps, MouseEvent } from "react";
 import {
   capacitorProductHash,
   isCapacitorShell,
+  parseCapacitorProductSlug,
 } from "../lib/capacitor";
 import { rememberHomeScroll } from "../lib/home-scroll";
 
@@ -25,7 +26,9 @@ export function ProductLink({
         {...props}
         href={capacitorProductHash(slug)}
         onClick={(e: MouseEvent<HTMLAnchorElement>) => {
-          rememberHomeScroll();
+          if (!parseCapacitorProductSlug(window.location.hash)) {
+            rememberHomeScroll();
+          }
           onClick?.(e as never);
         }}
       />

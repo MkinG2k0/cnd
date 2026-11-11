@@ -37,6 +37,7 @@
     "mobile-web",
     "android",
     "ios",
-    "scripts"
+    "scripts",
+    "cnd"
   ]
 }

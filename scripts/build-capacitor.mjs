@@ -52,6 +52,11 @@ let result = spawnSync(
     env: {
       ...process.env,
       NEXT_PUBLIC_CAPACITOR: "1",
+      NEXT_PUBLIC_SITE_ASSET_ORIGIN:
+        process.env.NEXT_PUBLIC_SITE_ASSET_ORIGIN || "https://cnd-kohl.vercel.app",
+      NEXT_PUBLIC_PDF_ASSET_ORIGIN:
+        process.env.NEXT_PUBLIC_PDF_ASSET_ORIGIN ||
+        "https://media.githubusercontent.com/media/MkinG2k0/cnd/master/public",
     },
     shell: process.platform === "win32",
   },
@@ -79,6 +84,11 @@ if ((result.status ?? 1) !== 0 && !(await exportReady())) {
       env: {
         ...process.env,
         NEXT_PUBLIC_CAPACITOR: "1",
+        NEXT_PUBLIC_SITE_ASSET_ORIGIN:
+          process.env.NEXT_PUBLIC_SITE_ASSET_ORIGIN || "https://cnd-kohl.vercel.app",
+        NEXT_PUBLIC_PDF_ASSET_ORIGIN:
+          process.env.NEXT_PUBLIC_PDF_ASSET_ORIGIN ||
+          "https://media.githubusercontent.com/media/MkinG2k0/cnd/master/public",
       },
       shell: process.platform === "win32",
     },

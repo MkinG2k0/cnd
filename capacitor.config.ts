@@ -7,6 +7,14 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: "https",
     hostname: "localhost",
+    allowNavigation: [
+      "cnd-kohl.vercel.app",
+      "cnd05.ru",
+      "cdn.sanity.io",
+      "cdn.jsdelivr.net",
+      "media.githubusercontent.com",
+      "mozilla.github.io",
+    ],
   },
   android: {
     allowMixedContent: false,

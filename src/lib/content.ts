@@ -1,6 +1,7 @@
 import { client } from "../sanity/client";
 import { imageUrl } from "../sanity/image";
 import { PRODUCTS_QUERY, SITE_SETTINGS_QUERY } from "../sanity/queries";
+import { projectPdfUrl } from "./capacitor";
 import { formatPropertyDetail } from "./format-detail";
 
 export { formatPropertyDetail };
@@ -166,7 +167,9 @@ export function mapSiteContent(
       .map((img) => imageUrl(img as never, 1200))
       .filter(Boolean),
     city: product.city,
-    projectPdf: product.projectPdf || undefined,
+    projectPdf: product.projectPdf
+      ? projectPdfUrl(product.projectPdf)
+      : undefined,
     slug: product.slug || slugifyName(product.name),
   }));
 

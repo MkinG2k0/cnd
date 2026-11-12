@@ -1,6 +1,20 @@
 "use client";
 
+import { Browser } from "@capacitor/browser";
 import { useEffect, useId, useRef, useState } from "react";
+
+import {
+  browserPdfViewerUrl,
+  isCapacitorShell,
+} from "../lib/capacitor";
+import { AppLoader } from "./app-loader";
+
+function previewSrc(href: string, capacitor: boolean): string {
+  if (!capacitor) {
+    return `${href}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&view=FitH`;
+  }
+  return `/pdf-viewer.html?file=${encodeURIComponent(href)}`;
+}
 
 export function ProjectPdfButton({
   name,
@@ -12,6 +26,8 @@ export function ProjectPdfButton({
   const titleId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
+  const [frameReady, setFrameReady] = useState(false);
+  const capacitor = isCapacitorShell();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -22,6 +38,10 @@ export function ProjectPdfButton({
       dialog.close();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (open) setFrameReady(false);
+  }, [open, href]);
 
   return (
     <>
@@ -51,9 +71,14 @@ export function ProjectPdfButton({
             <div className="project-pdf-bar-actions">
               <a
                 className="button light-green"
-                href={href}
+                href={capacitor ? browserPdfViewerUrl(href) : href}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={(e) => {
+                  if (!capacitor) return;
+                  e.preventDefault();
+                  void Browser.open({ url: browserPdfViewerUrl(href) });
+                }}
               >
                 Открыть PDF
               </a>
@@ -67,13 +92,22 @@ export function ProjectPdfButton({
               </button>
             </div>
           </header>
-          {open ? (
-            <iframe
-              className="project-pdf-frame"
-              src={`${href}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&view=FitH`}
-              title={`Проект ${name}`}
-            />
-          ) : null}
+          <div className="project-pdf-stage">
+            {open && !frameReady ? (
+              <AppLoader
+                className="project-pdf-loader"
+                label="Подготовка просмотрщика…"
+              />
+            ) : null}
+            {open ? (
+              <iframe
+                className="project-pdf-frame"
+                src={previewSrc(href, capacitor)}
+                title={`Проект ${name}`}
+                onLoad={() => setFrameReady(true)}
+              />
+            ) : null}
+          </div>
         </div>
       </dialog>
     </>

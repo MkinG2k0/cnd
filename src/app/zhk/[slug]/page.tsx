@@ -12,6 +12,7 @@ import {
   productPath,
   productSlug,
 } from "../../../lib/content";
+import { AppLoader } from "../../app-loader";
 import { CapacitorShell } from "../../capacitor-shell";
 import { PropertyDetailView } from "../../property-detail-view";
 
@@ -86,10 +87,8 @@ export async function generateMetadata({
 
 function PropertyPageFallback() {
   return (
-    <main id="property-main" className="property-page">
-      <div className="wrap property-top">
-        <p>Загрузка объекта…</p>
-      </div>
+    <main id="property-main" className="property-page app-loader-screen">
+      <AppLoader label="Загрузка объекта…" />
     </main>
   );
 }

@@ -9,6 +9,7 @@ import {
   type SiteContent,
 } from "../lib/content";
 import { fetchSiteContent } from "../lib/fetch-site-content";
+import { AppLoader } from "./app-loader";
 import { Home } from "./home";
 import { PropertyDetailView } from "./property-detail-view";
 
@@ -77,23 +78,25 @@ export function CapacitorShell() {
 
   if (state.status === "loading") {
     return (
-      <main className="wrap" style={{ padding: "48px 0" }}>
-        <p>Загрузка каталога…</p>
+      <main className="app-loader-screen">
+        <AppLoader label="Загрузка каталога…" />
       </main>
     );
   }
 
   if (state.status === "error") {
     return (
-      <main className="wrap" style={{ padding: "48px 0" }}>
-        <p>{state.message}</p>
-        <button
-          type="button"
-          className="button"
-          onClick={() => window.location.reload()}
-        >
-          Повторить
-        </button>
+      <main className="app-loader-screen">
+        <div className="app-loader-error">
+          <p>{state.message}</p>
+          <button
+            type="button"
+            className="button"
+            onClick={() => window.location.reload()}
+          >
+            Повторить
+          </button>
+        </div>
       </main>
     );
   }

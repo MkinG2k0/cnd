@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/ensure-git-lfs-assets.mjs && next build",
     "build:capacitor": "node scripts/build-capacitor.mjs",
     "cap:icons": "node scripts/generate-capacitor-icons.mjs",
     "cap:keystore": "node scripts/create-capacitor-keystore.mjs",
@@ -20,6 +20,7 @@
   "dependencies": {
     "@capacitor/android": "^8.6.0",
     "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
     "@capacitor/cli": "^8.6.0",
     "@capacitor/core": "^8.6.0",
     "@capacitor/status-bar": "^8.0.4",

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PDF</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #f3f5f2;
+        font: 14px/1.4 system-ui, sans-serif;
+        color: #68736d;
+      }
+      #status {
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 20px 16px;
+        text-align: center;
+      }
+      #status[hidden] {
+        display: none;
+      }
+      #label {
+        font-size: 14px;
+      }
+      #percent {
+        font-size: 28px;
+        font-weight: 550;
+        letter-spacing: -0.04em;
+        color: #193e35;
+        font-variant-numeric: tabular-nums;
+      }
+      .track {
+        width: min(280px, 70vw);
+        height: 6px;
+        border-radius: 999px;
+        background: #d7e0d7;
+        overflow: hidden;
+      }
+      #bar {
+        height: 100%;
+        width: 0%;
+        border-radius: inherit;
+        background: #193e35;
+        transition: width 0.15s linear;
+      }
+      #pages {
+        padding: 0 0 24px;
+      }
+      canvas {
+        display: block;
+        margin: 12px auto;
+        max-width: calc(100% - 24px);
+        height: auto;
+        background: #fff;
+        box-shadow: 0 2px 12px rgba(12, 29, 23, 0.12);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status">
+      <div id="label">Загрузка PDF…</div>
+      <div id="percent">0%</div>
+      <div class="track" aria-hidden="true"><div id="bar"></div></div>
+    </div>
+    <div id="pages"></div>
+    <script type="module">
+      const file = new URLSearchParams(location.search).get("file");
+      const status = document.getElementById("status");
+      const label = document.getElementById("label");
+      const percentEl = document.getElementById("percent");
+      const bar = document.getElementById("bar");
+      const pages = document.getElementById("pages");
+
+      function setProgress(loaded, total) {
+        if (!total || total <= 0) {
+          label.textContent = "Загрузка PDF…";
+          percentEl.textContent = formatBytes(loaded);
+          bar.style.width = "15%";
+          return;
+        }
+        const value = Math.min(100, Math.round((loaded / total) * 100));
+        label.textContent = "Загрузка PDF…";
+        percentEl.textContent = `${value}%`;
+        bar.style.width = `${value}%`;
+      }
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+      }
+
+      if (!file) {
+        label.textContent = "Файл не указан";
+        percentEl.hidden = true;
+        bar.parentElement.hidden = true;
+        throw new Error("missing file");
+      }
+
+      const pdfjs = await import(
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs"
+      );
+      pdfjs.GlobalWorkerOptions.workerSrc =
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
+
+      try {
+        const loadingTask = pdfjs.getDocument({ url: file });
+        loadingTask.onProgress = ({ loaded, total }) => {
+          setProgress(loaded, total);
+        };
+
+        const doc = await loadingTask.promise;
+        label.textContent = "Рендер страниц…";
+        percentEl.textContent = "0%";
+        bar.style.width = "0%";
+
+        const scale = Math.min(1.35, (window.innerWidth - 24) / 595);
+        for (let i = 1; i <= doc.numPages; i += 1) {
+          const page = await doc.getPage(i);
+          const viewport = page.getViewport({ scale });
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d", { alpha: false });
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          pages.appendChild(canvas);
+          await page.render({ canvasContext: context, viewport }).promise;
+          const renderPct = Math.round((i / doc.numPages) * 100);
+          percentEl.textContent = `${renderPct}%`;
+          bar.style.width = `${renderPct}%`;
+          if (i === 1) status.hidden = true;
+        }
+      } catch (error) {
+        percentEl.hidden = true;
+        bar.parentElement.hidden = true;
+        label.textContent =
+          error instanceof Error
+            ? `Не удалось показать превью: ${error.message}`
+            : "Не удалось показать превью";
+      }
+    </script>
+  </body>
+</html>

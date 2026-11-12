@@ -5,6 +5,9 @@
 - applicationId: `ru.cnd05.app`
 - versionName: `1.1.0` / versionCode: `3`
 - Контент ЖК обновляется без новой сборки APK (клиентский fetch Sanity)
+- PDF проектной документации не кладутся в APK: в Capacitor открываются с
+  `NEXT_PUBLIC_PDF_ASSET_ORIGIN` (по умолчанию GitHub LFS media), остальное
+  из `out/` или Sanity CDN
 - Push в MVP нет
 - Target store: RuStore
 

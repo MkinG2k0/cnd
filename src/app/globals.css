@@ -329,8 +329,17 @@ a.button.light{margin-top:28px}
 .project-pdf-bar-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .project-pdf-close{position:static;width:40px;height:40px;flex-shrink:0;background:#fff;border:1px solid #dce3db;border-radius:50%;font-size:26px;line-height:1;display:grid;place-items:center;cursor:pointer;transition:transform .2s,background .2s}
 .project-pdf-close:hover{transform:rotate(90deg);background:#f3f5f2}
-.project-pdf-frame{flex:1;width:100%;min-height:0;border:0;background:var(--pale)}
+.project-pdf-stage{position:relative;flex:1;min-height:0;display:flex;background:var(--pale)}
+.project-pdf-frame{flex:1;width:100%;min-height:0;border:0;background:transparent}
+.project-pdf-loader{position:absolute;inset:0;z-index:1;background:var(--pale)}
 .project-doc-tag{position:absolute;left:14px;bottom:14px;z-index:2;font-size:11px;padding:6px 10px;border-radius:6px;background:rgba(25,62,53,.92);color:#fff;letter-spacing:.01em;pointer-events:none}
+.app-loader-screen{min-height:100dvh;display:grid;place-items:center;padding:48px 24px;background:#fff}
+.app-loader{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;color:var(--muted)}
+.app-loader p{margin:0;font-size:14px}
+.app-loader-spinner{width:36px;height:36px;border-radius:50%;border:3px solid #d7e0d7;border-top-color:var(--green);animation:app-loader-spin .7s linear infinite}
+.app-loader-error{display:flex;flex-direction:column;align-items:center;gap:18px;max-width:360px;text-align:center}
+.app-loader-error p{margin:0;color:var(--ink);font-size:15px;line-height:1.5}
+@keyframes app-loader-spin{to{transform:rotate(360deg)}}
 .property-image{position:relative}
 @media(max-width:560px){
   .project-pdf-modal{width:calc(100vw - 12px);height:96vh;max-height:96vh;border-radius:10px}

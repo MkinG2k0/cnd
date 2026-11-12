@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const isCapacitor = process.env.NEXT_PUBLIC_CAPACITOR === "1";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    agentUpgrade: "security",
+  },
   ...(isCapacitor
     ? {
         output: "export" as const,

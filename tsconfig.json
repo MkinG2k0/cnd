@@ -33,8 +33,6 @@
   "exclude": [
     "node_modules",
     "studio-cnd",
-    "mobile",
-    "mobile-web",
     "android",
     "ios",
     "scripts",

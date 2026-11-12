@@ -24,8 +24,6 @@ npm start
 - `src/sanity/` — клиент и GROQ-запросы к Sanity
 - `studio-cnd/` — Sanity Studio (standalone, порт 3333)
 - `android/` — Capacitor Android (appId `ru.cnd05.app`)
-- `mobile/` — Expo-приложение (отдельный стек)
-- `mobile-web/` — старая WebView-обёртка remote URL
 - `content/site.json` — исходный снимок контента (для миграции)
 - `content/project-pdfs.json` — привязка PDF к ЖК
 - `public/assets/` — исходные фото (загружены в Sanity)

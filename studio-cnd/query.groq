@@ -1,0 +1,1 @@
+*[_type == "siteSettings"][0]{_id, "logo": logo.asset->_id}
